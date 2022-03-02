@@ -65,13 +65,16 @@ ggplot(avg_board) +
 ```{r setup, include=True}
 knitr::opts_chunk$set(echo = FALSE)
 
-temp_board = capmetro %>%
-  group_by(hour_of_day) %>% 
-  summarize(total_board = sum(boarding),
-            )
+capmetro = capmetro %>% 
+  separate(Time, c("Hour","Minute", "Second")  ,sep = ":")
+
+# temp_board = capmetro %>%
+#   group_by(hour_of_day) %>% 
+#   summarize(total_board = sum(boarding),
+#             )
 
 ggplot(capmetro) +
-  geom_point(aes(x=temperature, y = boarding, col = weekend)) +
+  geom_point(aes(x=boarding, y = temperature, col = weekend)) +
   facet_wrap(~hour_of_day)
 
 ```
