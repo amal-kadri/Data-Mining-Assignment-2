@@ -26,10 +26,11 @@ library(dplyr)
 library(tibble)
 library(zoo)
 library(here)
+library(mosaic)
 
 
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
-mosaicData::SaratogaHouses
+saratoga = (SaratogaHouses)
 kredit = read.csv(here("data", "german_credit.csv"))
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
@@ -77,10 +78,11 @@ ggplot(capmetro) +
   facet_wrap(~hour_of_day)
 
 #change___
+
 ```
 
 ```{r}
-saratoga = data(SaratogaHouses)
+saratoga = (SaratogaHouses)
 
 head(saratoga)
 ```
