@@ -40,16 +40,21 @@ hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```
 
 ```{r}
-# view(capmetro)
+capmetro = read.csv(here("data", "capmetro_UT.csv"))
 capmetro = capmetro %>%
   mutate(date_time = ymd_hms(timestamp))
 
+capmetro = capmetro %>% 
+  mutate(Timestamp = timestamp)%>%
+  separate(timestamp, c("Date","Time")  ,sep = " ")
 
+capmetro$day_of_week = factor(capmetro$day_of_week, levels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
 
 avg_board = capmetro %>% 
   group_by(hour_of_day, day_of_week, month) %>% 
   summarize(avg_pass = mean(boarding)) %>% 
-  arrange(hour_of_day)
+  arrange(hour_of_day, day_of_week, month)
+view(capmetro)
 
 avg_board
   
