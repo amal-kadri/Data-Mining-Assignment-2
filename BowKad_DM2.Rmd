@@ -39,7 +39,9 @@ hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```
 
-```{r}
+```{r setup, include=True}
+knitr::opts_chunk$set(echo = FALSE)
+
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
 capmetro = capmetro %>%
   mutate(date_time = ymd_hms(timestamp))
