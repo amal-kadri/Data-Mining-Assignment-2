@@ -25,6 +25,9 @@ library(data.table)
 library(dplyr)
 library(tibble)
 library(zoo)
+
+
+
 capmetro = read.csv("/Users/jonathanbowman/Downloads/capmetro_UT.csv")
 saratoga = data(SaratogaHouses)
 kredit = read.csv("/Users/jonathanbowman/Downloads/german_credit.csv")
@@ -41,7 +44,7 @@ view(capmetro)
 avg_board = capmetro %>% 
   group_by(hour_of_day, day_of_week, month) %>% 
   summarize(avg_pass = mean(boarding)) %>% 
-  arrange()
+  arrange(desc(month, day_of_week, hour_of_day))
 
 avg_board
   
