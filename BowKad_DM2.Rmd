@@ -29,13 +29,9 @@ library(here)
 
 
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
-#capmetro = read.csv("/Users/jonathanbowman/Downloads/capmetro_UT.csv")
-saratoga = data(SaratogaHouses)
+mosaicData::SaratogaHouses
 kredit = read.csv(here("data", "german_credit.csv"))
-#kredit = read.csv("/Users/jonathanbowman/Downloads/german_credit.csv")
-#hotel_dev = read.csv("/Users/jonathanbowman/Downloads/hotels_dev.csv")
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
-#hotel_val = read.csv("/Users/jonathanbowman/Downloads/hotels_val.csv")
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```
 
@@ -66,5 +62,23 @@ ggplot(avg_board) +
   
 ```
 
+```{r setup, include=True}
+knitr::opts_chunk$set(echo = FALSE)
 
+temp_board = capmetro %>%
+  group_by(hour_of_day) %>% 
+  summarize(total_board = sum(boarding),
+            )
+
+ggplot(capmetro) +
+  geom_point(aes(x=temperature, y = boarding, col = weekend)) +
+  facet_wrap(~hour_of_day)
+
+```
+
+```{r}
+saratoga = data(SaratogaHouses)
+
+head(saratoga)
+```
 
