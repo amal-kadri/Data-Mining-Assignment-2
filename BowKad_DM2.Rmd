@@ -39,8 +39,11 @@ capmetro = capmetro %>%
 view(capmetro)
 
 avg_board = capmetro %>% 
-  groupby(hour_of_day, day_of_week, month) %>% 
-  summraize(avg_pass = mean())
+  group_by(hour_of_day, day_of_week, month) %>% 
+  summarize(avg_pass = mean(boarding)) %>% 
+  arrange()
+
+avg_board
   
 ```
 

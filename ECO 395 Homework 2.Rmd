@@ -38,9 +38,9 @@ capmetro = capmetro %>%
   mutate(date_time = ymd_hms(timestamp))
 view(capmetro)
 
-avg_board = capmetro %>% 
-  groupby(hour_of_day, day_of_week, month) %>% 
-  summraize(avg_pass = mean())
+# avg_board = capmetro %>% 
+#   groupby(hour_of_day, day_of_week, month) %>% 
+#   summraize(avg_pass = mean())
   
 ```
 
