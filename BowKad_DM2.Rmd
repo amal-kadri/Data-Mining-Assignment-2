@@ -1,6 +1,6 @@
 ---
 title: 'ECO 395 Homework 2: John Bowman, Amal Kadri'
-author: "John Bowman, Amal Kadrim"
+author: "John Bowman, Amal Kadri"
 date: "3/1/2022"
 output: md_document
 ---
