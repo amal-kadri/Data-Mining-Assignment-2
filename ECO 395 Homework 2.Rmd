@@ -1,0 +1,48 @@
+---
+title: 'ECO 395 Homework 2: John Bowman, Amal Kadri, Rohan Mantre'
+author: "John Bowman, Amal Kadrim, Rohan Mantre"
+date: "3/1/2022"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(rsample)
+library(lubridate)
+library(caret)
+library(modelr)
+library(parallel)
+library(foreach)
+library(readr)
+library(data.table)
+library(dplyr)
+library(tibble)
+library(zoo)
+capmetro = read.csv("/Users/jonathanbowman/Downloads/capmetro_UT.csv")
+saratoga = data(SaratogaHouses)
+kredit = read.csv("/Users/jonathanbowman/Downloads/german_credit.csv")
+hotel_dev = read.csv("/Users/jonathanbowman/Downloads/hotels_dev.csv")
+hotel_val = read.csv("/Users/jonathanbowman/Downloads/hotels_val.csv")
+```
+
+```{r}
+view(capmetro)
+capmetro = capmetro %>%
+  mutate(date_time = ymd_hms(timestamp))
+view(capmetro)
+
+avg_board = capmetro %>% 
+  groupby(hour_of_day, day_of_week, month) %>% 
+  summraize(avg_pass = mean())
+  
+```
+
+
+
