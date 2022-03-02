@@ -63,18 +63,17 @@ ggplot(avg_board) +
 ```
 
 ```{r setup, include=True}
+#One panel of scatter plots showing boardings (y) vs. temperature (x) in each 15-minute window, faceted by hour of the day, and with points colored in according to whether it is a weekday or weekend. Give the figure an informative caption in which you explain what is shown in the figure and answer the following question, citing evidence from the figure. When we hold hour of day and weekend status constant, does temperature seem to have a noticeable effect on the number of UT students riding the bus?
+# These are exactly the kind of figures that Capital Metro planners might use to understand seasonal and intra-week variation in demand for UT bus service. They're also the kind of figures you'd make to assist in building a model to predict ridership (even though, in this problem you won't actually be building that model).
 knitr::opts_chunk$set(echo = FALSE)
 
-capmetro = capmetro %>% 
-  separate(Time, c("Hour","Minute", "Second")  ,sep = ":")
+temp_board = capmetro %>%
+  group_by(hour_of_day) %>%
+  summarise(mean = mean(boarding))
 
-# temp_board = capmetro %>%
-#   group_by(hour_of_day) %>% 
-#   summarize(total_board = sum(boarding),
-#             )
 
 ggplot(capmetro) +
-  geom_point(aes(x=boarding, y = temperature, col = weekend)) +
+  geom_point(aes(x=temperature, y = boarding, col = weekend)) +
   facet_wrap(~hour_of_day)
 
 #change___
