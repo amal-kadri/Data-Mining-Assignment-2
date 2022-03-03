@@ -94,6 +94,13 @@ houseLasso = gamlr(houseX, houseY, alpha = 1)
 plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 
+coef_vector = houseCoef %>% as.matrix() %>% 
+  as.data.frame() %>% 
+  round(abs(seg100),2) %>% 
+  filter(magnitude>0) %>% 
+  cbind(newColName = rownames(coefs), coefs) %>% 
+  as.vector(coefs_fields[2:nrow(coefs_fields),1])
+coef_vector
 houseCoef = coef(houseLasso)
 houseCoef
 coefData = as.data.frame(as.matrix(houseCoef))
