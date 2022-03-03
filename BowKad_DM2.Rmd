@@ -37,7 +37,7 @@ kredit = read.csv(here("data", "german_credit.csv"))
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```
-
+#1a
 ```{r setup, include=True}
 knitr::opts_chunk$set(echo = FALSE)
 
@@ -65,6 +65,7 @@ ggplot(avg_board) +
   
 ```
 
+#1b
 ```{r setup, include=True}
 
 knitr::opts_chunk$set(echo = FALSE)
@@ -80,6 +81,7 @@ ggplot(capmetro) +
 #fuck with dotsize and label this shiut
 ```
 
+#Number 2
 ```{r}
 saratoga = (SaratogaHouses)
 
@@ -177,7 +179,7 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 
 ```
 
-
+#Number 3
 ```{r}
 kredit = read.csv(here("data", "german_credit.csv"))
 kredit$Good = ifelse(kredit$history == "good",1,0)
