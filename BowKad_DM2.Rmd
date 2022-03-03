@@ -75,7 +75,7 @@ temp_board = capmetro %>%
 
 
 ggplot(capmetro) +
-  geom_point(aes(x=temperature, y = boarding, col = weekend)) +
+  geom_point(aes(x=temperature, y = boarding, col = weekend), size = .05) +
   facet_wrap(~hour_of_day)
 
 ```
@@ -94,17 +94,19 @@ houseLasso = gamlr(houseX, houseY, alpha = 1)
 plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 
-coef_vector = houseCoef %>% as.matrix() %>% 
-  as.data.frame() %>% 
-  round(abs(seg100),2) %>% 
-  filter(magnitude>0) %>% 
-  cbind(newColName = rownames(coefs), coefs) %>% 
+coef_vector = houseCoef %>% as.matrix() %>%
+  as.data.frame() %>%
+  round(abs(houseCoef$seg100),2) %>%
+  filter(magnitude>0) %>%
+  cbind(newColName = rownames(coefs), coefs) %>%
   as.vector(coefs_fields[2:nrow(coefs_fields),1])
 coef_vector
 houseCoef = coef(houseLasso)
 houseCoef
 coefData = as.data.frame(as.matrix(houseCoef))
+coefData
 coefData$magnitude = round(abs(coefData$seg100),2)
+coefData
 coefs = coefData %>%
   filter(magnitude>0)
 coefs
@@ -185,6 +187,7 @@ credit_model = glm(Default ~ duration + amount + installment + age + history
                    + purpose + foreign, family = "binomial", kredit_train)
 
 kredit_test = mutate(.data = kredit_test, yhat = predict(credit_model, kredit_test, type='response'))
+kredit_test
 # ggplot(kred_test) + 
 #   geom_jitter(aes(x=Default, y=yhat), width=0.1, alpha=0.2) + 
 #   labs(title="Test-set predicted probabilities", y = "P(spam | x)", x="Spam?") + 
