@@ -28,6 +28,7 @@ library(zoo)
 library(here)
 library(mosaic)
 library(gamlr)
+library(class)
 
 
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
@@ -110,12 +111,36 @@ saratoga_test = testing(saratoga_split)
 lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
 
 lmLasso = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction
-      + lotSize + livingArea  +  bedrooms+ bathrooms + lotSize:age + lotSize:fireplaces 
+      + lotSize + livingArea  +  bedrooms+ bathrooms + age + lotSize:age + lotSize:fireplaces 
       + age:livingArea + age:centralAir + livingArea:fireplaces + livingArea:bathrooms
       + livingArea:rooms + livingArea:centralAir + bedrooms:fireplaces + fireplaces:centralAir
       + bathrooms:rooms + bathrooms:centralAir, data = saratoga)
+k_grid = c(2:100)
+K_folds = 5
+houseKNN = crossv_kfold(saratoga_train, k = K_folds)
+houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+                                           + bedrooms + bathrooms + age, k= 20,
+                                           data = .))
+#models = map(houseKNN$train, ~ knnreg(price ~ lotSize, k=100, data = ., use.all=FALSE))
 
+cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
+  houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+                                           + bedrooms + bathrooms + age + sewer
+                                           + waterfront + newConstruction, k=k,
+                                           data = ., use.all = FALSE))
+  houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
+  c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
+}
+#houseMin = round(min(cv_House$err))
+houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
+
+minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+                                           + bedrooms + bathrooms + age+ sewer
+                                           + waterfront + newConstruction, k= houseMinK,
+                                           data = .))
 rmse(lm2, saratoga_test)
 rmse(lmLasso, saratoga_test)
+map2_dbl(minKModel, houseKNN$test, modelr::rmse)
+
 ```
 
