@@ -162,12 +162,14 @@ rmse(lmLasso, saratoga_test)
 map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 
 ```
+
+
 ```{r}
 kredit = read.csv(here("data", "german_credit.csv"))
 kredit$Good = ifelse(kredit$history == "good",1,0)
 kredit$Poor = ifelse(kredit$history == "poor",1,0)
 kredit$Terrible = ifelse(kredit$history == "terrible",1,0)
-
+view(kredit)
 credHistory = kredit%>%
   group_by(history)%>%
   summarise(numDefault = sum(Default), count = n()) %>%
@@ -177,6 +179,10 @@ credHistory = kredit%>%
 ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood))
 
+glm
+credit_model = glm(Default ~ duration + amount + installment + age + history + purpose + foreign, family = "binomial", kredit)
+
+plot(credit_model)
 
 
 ```
