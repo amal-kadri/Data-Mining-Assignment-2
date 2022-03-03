@@ -27,6 +27,7 @@ library(tibble)
 library(zoo)
 library(here)
 library(mosaic)
+library(gamlr)
 
 
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
@@ -85,5 +86,36 @@ ggplot(capmetro) +
 saratoga = (SaratogaHouses)
 
 head(saratoga)
+
+houseX = model.matrix(price~(.- pctCollege - sewer - waterfront - landValue - newConstruction -heating - fuel- sewer)^2, data = saratoga)[,-1] 
+
+houseY = saratoga$price
+
+houseLasso = gamlr(houseX, houseY, alpha = 1)
+plot(houseLasso)
+lambdamin = which.min(AICc(houseLasso))
+
+houseCoef = coef(houseLasso)
+houseCoef
+coefData = as.data.frame(as.matrix(houseCoef))
+coefData$magnitude = round(abs(coefData$seg100),2)
+coefs = coefData %>%
+  filter(magnitude>0)
+rownames = row.names(coefs)
+rownames
+saratoga_split = initial_split(saratoga, prop = 0.8)
+saratoga_train = training(saratoga_split)
+saratoga_test = testing(saratoga_split)
+
+lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
+
+lmLasso = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction
+      + lotSize + livingArea  +  bedrooms+ bathrooms + lotSize:age + lotSize:fireplaces 
+      + age:livingArea + age:centralAir + livingArea:fireplaces + livingArea:bathrooms
+      + livingArea:rooms + livingArea:centralAir + bedrooms:fireplaces + fireplaces:centralAir
+      + bathrooms:rooms + bathrooms:centralAir, data = saratoga)
+
+rmse(lm2, saratoga_test)
+rmse(lmLasso, saratoga_test)
 ```
 
