@@ -66,8 +66,7 @@ ggplot(avg_board) +
 ```
 
 ```{r setup, include=True}
-#One panel of scatter plots showing boardings (y) vs. temperature (x) in each 15-minute window, faceted by hour of the day, and with points colored in according to whether it is a weekday or weekend. Give the figure an informative caption in which you explain what is shown in the figure and answer the following question, citing evidence from the figure. When we hold hour of day and weekend status constant, does temperature seem to have a noticeable effect on the number of UT students riding the bus?
-# These are exactly the kind of figures that Capital Metro planners might use to understand seasonal and intra-week variation in demand for UT bus service. They're also the kind of figures you'd make to assist in building a model to predict ridership (even though, in this problem you won't actually be building that model).
+
 knitr::opts_chunk$set(echo = FALSE)
 
 temp_board = capmetro %>%
@@ -78,8 +77,6 @@ temp_board = capmetro %>%
 ggplot(capmetro) +
   geom_point(aes(x=temperature, y = boarding, col = weekend)) +
   facet_wrap(~hour_of_day)
-
-#change___
 
 ```
 
@@ -96,6 +93,26 @@ houseLasso = gamlr(houseX, houseY, alpha = 1)
 plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 
+###
+
+outcome <- "mpg"
+variables <- c("cyl", "disp", "hp", "carb")
+
+f <- as.formula(
+  paste(outcome, 
+        paste(variables, collapse = " + "), 
+        sep = " ~ "))
+print(f)
+# mpg ~ cyl + disp + hp + carb
+
+
+# The new line of code
+model <- eval(bquote(   lm(.(f), data = mtcars)   ))
+
+###
+
+
+
 houseCoef = coef(houseLasso)
 houseCoef
 coefData = as.data.frame(as.matrix(houseCoef))
@@ -109,12 +126,14 @@ saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
 
 lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
-
+### lm for soft coade variables
 lmLasso = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction
       + lotSize + livingArea  +  bedrooms+ bathrooms + age + lotSize:age + lotSize:fireplaces 
       + age:livingArea + age:centralAir + livingArea:fireplaces + livingArea:bathrooms
       + livingArea:rooms + livingArea:centralAir + bedrooms:fireplaces + fireplaces:centralAir
       + bathrooms:rooms + bathrooms:centralAir, data = saratoga)
+
+
 k_grid = c(2:100)
 K_folds = 5
 houseKNN = crossv_kfold(saratoga_train, k = K_folds)
