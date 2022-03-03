@@ -93,12 +93,22 @@ houseY = saratoga$price
 houseLasso = gamlr(houseX, houseY, alpha = 1)
 plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
-
-coef_vector = houseCoef %>% as.matrix() %>%
-  as.data.frame() %>%
-  round(abs(houseCoef$seg100),2) %>%
-  filter(magnitude>0) %>%
-  cbind(newColName = rownames(coefs), coefs) %>%
+houseCoef = coef(houseLasso)
+houseCoef
+coefData = houseCoef %>% 
+  as.matrix() %>%
+  as.data.frame()
+coefData$magnitude = round(abs(coefData$seg100),2)
+coefData
+coefData = coefData %>%
+  filter(magnitude > 0)
+coef_vector = coefData %>% cbind(newColName = rownames(coefs), coefs) %>%
+  as.vector(coefData[2:nrow(coefData),1])
+coef_vextor = coef_vextor %>%
+  filter(magnitude > 0)
+coef_vextor = round(abs(coef_vector$seg100),2)
+coef_vector
+cbind(newColName = rownames(coefs), coefs) %>%
   as.vector(coefs_fields[2:nrow(coefs_fields),1])
 coef_vector
 houseCoef = coef(houseLasso)
