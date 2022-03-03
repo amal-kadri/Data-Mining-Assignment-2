@@ -77,7 +77,7 @@ temp_board = capmetro %>%
 ggplot(capmetro) +
   geom_point(aes(x=temperature, y = boarding, col = weekend), size = .05) +
   facet_wrap(~hour_of_day)
-
+#fuck with dotsize and label this shiut
 ```
 
 ```{r}
@@ -137,11 +137,11 @@ lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstructi
 lmLasso = eval(bquote(lm(.(f), data = saratoga)))
 
 ### lm for soft code variables
-lmLasso = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction
-      + lotSize + livingArea  +  bedrooms+ bathrooms + age + lotSize:age + lotSize:fireplaces 
-      + age:livingArea + age:centralAir + livingArea:fireplaces + livingArea:bathrooms
-      + livingArea:rooms + livingArea:centralAir + bedrooms:fireplaces + fireplaces:centralAir
-      + bathrooms:rooms + bathrooms:centralAir, data = saratoga)
+# lmLasso = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction
+#       + lotSize + livingArea  +  bedrooms+ bathrooms + age + lotSize:age + lotSize:fireplaces 
+#       + age:livingArea + age:centralAir + livingArea:fireplaces + livingArea:bathrooms
+#       + livingArea:rooms + livingArea:centralAir + bedrooms:fireplaces + fireplaces:centralAir
+#       + bathrooms:rooms + bathrooms:centralAir, data = saratoga)
 
 
 k_grid = c(2:100)
@@ -170,6 +170,10 @@ minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea
 rmse(lm2, saratoga_test)
 rmse(lmLasso, saratoga_test)
 map2_dbl(minKModel, houseKNN$test, modelr::rmse)
+
+##################################################################################
+#Re-Lasso
+
 
 ```
 
@@ -208,9 +212,6 @@ yhat_test = ifelse(credPredict > 0.5, 1, 0)
 kredit_test =  mutate(.data = kredit_test, yhat_t = ifelse(yhat > 0.5, 1, 0))
 confusion_out_logit = table(y = kredit_test$Default,
                             yhat = kredit_test$yhat_t)
-# length(kredit_test$Default)
-# length(kredit_test$yhat_t)
-# confusionMatrix(data = kredit_test$Default, reference = kredit_test$yhat_t)
 
 confusion_out_logit
 
