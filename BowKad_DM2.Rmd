@@ -169,7 +169,7 @@ kredit = read.csv(here("data", "german_credit.csv"))
 kredit$Good = ifelse(kredit$history == "good",1,0)
 kredit$Poor = ifelse(kredit$history == "poor",1,0)
 kredit$Terrible = ifelse(kredit$history == "terrible",1,0)
-view(kredit)
+#view(kredit)
 credHistory = kredit%>%
   group_by(history)%>%
   summarise(numDefault = sum(Default), count = n()) %>%
@@ -179,11 +179,31 @@ credHistory = kredit%>%
 ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood))
 
-glm
-credit_model = glm(Default ~ duration + amount + installment + age + history + purpose + foreign, family = "binomial", kredit)
+#glm
+kredit_split = initial_split(kredit, prop = 0.8)
+kredit_train = training(kredit_split)
+kredit_test = testing(kredit_split)
+credit_model = glm(Default ~ duration + amount + installment + age + history 
+                   + purpose + foreign, family = "binomial", kredit_train)
 
-plot(credit_model)
+kredit_test = mutate(.data = kredit_test, yhat = predict(credit_model, kredit_test, type='response'))
+# ggplot(kred_test) + 
+#   geom_jitter(aes(x=Default, y=yhat), width=0.1, alpha=0.2) + 
+#   labs(title="Test-set predicted probabilities", y = "P(spam | x)", x="Spam?") + 
+#   stat_summary(aes(x=Default, y=yhat), fun='mean', col='red', size=1)
 
+credPredict = predict(credit_model, data=kredit_test, type="response")
+yhat_test = ifelse(credPredict > 0.5, 1, 0)
+kredit_test =  mutate(.data = kredit_test, yhat_t = ifelse(yhat > 0.5, 1, 0))
+confusion_out_logit = table(y = kredit_test$Default,
+                            yhat = kredit_test$yhat_t)
+# length(kredit_test$Default)
+# length(kredit_test$yhat_t)
+# confusionMatrix(data = kredit_test$Default, reference = kredit_test$yhat_t)
+
+confusion_out_logit
+
+#make ROC curve
 
 ```
 
