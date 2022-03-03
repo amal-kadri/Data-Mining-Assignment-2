@@ -104,6 +104,10 @@ coefData = coefData %>%
   filter(magnitude > 0)
 coef_vector = coefData %>% cbind(newColName = rownames(coefs), coefs) %>%
   as.vector(coefData[2:nrow(coefData),1])
+```
+
+
+```{r}
 coef_vextor = coef_vextor %>%
   filter(magnitude > 0)
 coef_vextor = round(abs(coef_vector$seg100),2)
@@ -219,4 +223,8 @@ confusion_out_logit
 
 ```
 
+```{r}
+model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, hotel_dev, family = "binomial")
+plot(model1)
+```
 
