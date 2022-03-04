@@ -115,7 +115,7 @@ houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - water
 houseY = saratoga$price
 
 houseLasso = gamlr(houseX, houseY, alpha = 1)
-plot(houseLasso)
+#plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 houseCoef = coef(houseLasso)
 
@@ -287,7 +287,8 @@ credHistory = kredit%>%
   mutate(default_liklihood = numDefault/count)
 
 ggplot(credHistory)+
-  geom_col(aes(x = history, y = default_liklihood))
+  geom_col(aes(x = history, y = default_liklihood)) + ggtitle("Default Likelihood by Credit History") +
+  xlab("Credit History") + ylab("Default Likelihood")
 
 #glm
 
