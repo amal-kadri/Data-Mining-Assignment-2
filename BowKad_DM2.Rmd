@@ -366,6 +366,12 @@ hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 hotel_dev$meal =  as.factor(hotel_dev$meal)
 hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
+hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
+hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
+hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
+hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
+hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
+hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
 
 hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
 hotel_dev_train = training(hotel_dev_split)
@@ -374,8 +380,8 @@ hotel_dev_test = testing(hotel_dev_split)
 # y <- mtcars$hp
 # x <- data.matrix(mtcars[, c('mpg', 'wt', 'drat', 'qsec')])
 childY <- hotel_dev_train$children
-childX <- sparse.model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
-childMatrix= t(sparse.model.matrix(children ~ .-arrival_date-1, data = hotel_dev_test))
+childX <- model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
+childMatrix= t(model.matrix(children ~ .-arrival_date-1, data = hotel_dev_test))
 randomcrap = model_matrix(children ~ reserved_room_type, data = hotel_dev_test)
 # #fit lasso regression model using k-fold cross-validation
 # cv_model <- cv.glmnet(x, y, alpha = 1)
@@ -396,24 +402,19 @@ plot(childLasso)
 
 childBest <- glmnet(childX,childY,alpha = 1, lambda = best_lambda, family = "binomial", numfold = 5, trace.it = 1, standardize = FALSE)
 BetaKids = as.matrix(childBest[["beta"]])
-predict(childBest, s = best_lambda, newx = hotel_dev_test)
+testMatrix = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test)
+predictions = predict(childBest, newx = testMatrix)
+
+
 ################################
-traintest=rbind(training,testing)
-X = sparse.model.matrix(as.formula(paste("y ~", paste(colnames(training[,-1]), sep = "", collapse=" +"))), data = traintest)
-model = cv.glmnet(X[1:nrow(training),], training[,1], family = "binomial",type.measure = "auc",nfolds = 10)
-plot(model)
-model$lambda.min
-#predict on test set
-pred = predict(model, s='lambda.min', newx=X[-(1:nrow(training)),], type="response")
+# traintest=rbind(training,testing)
+# X = sparse.model.matrix(as.formula(paste("y ~", paste(colnames(training[,-1]), sep = "", collapse=" +"))), data = traintest)
+# model = cv.glmnet(X[1:nrow(training),], training[,1], family = "binomial",type.measure = "auc",nfolds = 10)
+# plot(model)
+# model$lambda.min
+# #predict on test set
+# pred = predict(model, s='lambda.min', newx=X[-(1:nrow(training)),], type="response")
 
-traintest = rbind(hotel_dev_train, hotel_dev_test)
-X = sparse.model.matrix(as.formula(paste(children ~ paste(colnames(hotel_dev_train[,-1]), sep = "", collapse=" +"))), data = traintest)
-modelChild = cv.glmnet(X[1:nrow(hotel_dev_train),], hotel_dev_train[,1], family = "binomial", type.measure = "auc", nfolds = 10)
-modelChild$lambda.min
-plot(modelChild)
-predChild = predict(modelChild, s = 'lambda.min', newx = X[-(1:nrow(hotel_dev_train)),], type = "response")
-
-pred = predict.(model, s='lambda.min', newx=X[-(1:nrow(training)),], type="response")
 # #make a prediction for the response value of a new observation
 # new = matrix(c(24, 2.5, 3.5, 18.5), nrow=1, ncol=4) 
 # predict(best_model, s = best_lambda, newx = new)
@@ -427,5 +428,18 @@ pred = predict.(model, s='lambda.min', newx=X[-(1:nrow(training)),], type="respo
 # rsq <- 1 - sse/sst
 # rsq
 ```
+#saved code
+```{r}
+
+traintest = rbind(hotel_dev_train, hotel_dev_test)
+X = sparse.model.matrix(as.formula(paste(children ~ paste(colnames(hotel_dev_train[,-1]), sep = "", collapse=" +"))), data = traintest)
+modelChild = cv.glmnet(X[1:nrow(hotel_dev_train),], hotel_dev_train[,1], family = "binomial", type.measure = "auc", nfolds = 10)
+modelChild$lambda.min
+plot(modelChild)
+predChild = predict(modelChild, s = 'lambda.min', newx = X[-(1:nrow(hotel_dev_train)),], type = "response")
+rmse(predChild)
+pred = predict.(model, s='lambda.min', newx=X[-(1:nrow(training)),], type="response")
+```
+
 
 
