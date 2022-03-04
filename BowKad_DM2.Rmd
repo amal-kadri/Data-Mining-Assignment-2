@@ -90,7 +90,14 @@ saratoga = (SaratogaHouses)
 
 saratoga$centralAir = ifelse(saratoga$centralAir == "Yes",1,0)
 saratoga$centralAir = as.numeric(saratoga$centralAir)
-
+saratoga = saratoga %>% 
+  mutate(pubsewer = ifelse(sewer == "public/commercial", 1,0))
+saratoga = saratoga %>% 
+  mutate(septic = ifelse(sewer == "septic", 1,0))
+saratoga = saratoga %>% 
+  mutate(nosewer = ifelse(sewer == "none", 1,0))
+saratoga = subset(saratoga, select = -c(sewer))
+saratoga
 #Lasso Regression
 
 houseX = model.matrix(price~(.- pctCollege - sewer - waterfront - landValue - newConstruction -heating - fuel- sewer)^2, data = saratoga)[,-1] 
@@ -151,16 +158,9 @@ folds_test_scale <- Xtest %>%
   bind_cols(price = ytest) %>% 
   as.data.frame(select(price, everything()))
 
-klist <- foreach(K = k_grid, .combine = 'c') %do%{
-  knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
-    modelr::rmse(data = folds_test_scale)
-  }
-}
-
-
 k_grid = c(2:100)
 K_folds = 5
-houseKNN = crossv_kfold(saratoga_train, k = K_folds)
+houseKNN = crossv_kfold(folds_train_scale, k = K_folds)
 houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
                                            + bedrooms + bathrooms + age, k= 20,
                                            data = .))
@@ -168,12 +168,20 @@ houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea
 
 cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
   houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age + sewer
-                                           + waterfront + newConstruction, k=k,
+                                           + bedrooms + bathrooms + age + sewerseptic + sewerpublic/commercial + sewernone + waterfront + newConstruction, k=k,
                                            data = ., use.all = FALSE))
   houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
   c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
+  }
+
+klist <- foreach(K = k_grid, .combine = 'c') %do%{
+  knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
+    modelr::rmse(data = folds_test_scale)
+  }
 }
+
+
+
 #houseMin = round(min(cv_House$err))
 houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
 
@@ -188,6 +196,7 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 ```
 
 ```{r}
+
 # KNN MODELS
 nfold = 5
 
