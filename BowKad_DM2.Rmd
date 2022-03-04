@@ -30,6 +30,7 @@ library(here)
 library(mosaic)
 library(gamlr)
 library(class)
+library(glmnet)
 
 
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
@@ -319,10 +320,51 @@ knitr::opts_chunk$set(echo = F)
 
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
+hotel_dev$meal =  as.factor(hotel_dev$meal)
+hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
+hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
+hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
+hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
+hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
+hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
+hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
+hotel_dev$arrival_date =  as.factor(hotel_dev$arrival_date)
 
+#train-test splits
 hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
 hotel_dev_train = training(hotel_dev_split)
 hotel_dev_test = testing(hotel_dev_split)
+
+#Matrices
+childY <- hotel_dev_train$children
+childX <- model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
+childMatrix= t(model.matrix(children ~ .-1, data = hotel_dev_train))
+#randomcrap = model_matrix(children ~ reserved_room_type, data = hotel_dev_test)
+# #fit lasso regression model using k-fold cross-validation
+# cv_model <- cv.glmnet(x, y, alpha = 1)
+# best_lambda <- cv_model$lambda.min
+childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
+best_lambda <- as.numeric(childLasso$lambda.min)
+
+# #display optimal lambda value
+# best_lambda
+
+# #view plot of test MSE's vs. lambda values
+# plot(cv_model)
+#plot(childLasso)
+# #view coefficients of best model
+# best_model <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+# coef(best_model)
+################################
+
+#childBest <- glmnet(childX,childY,alpha = 1, lambda = best_lambda , family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
+#BetaKids = as.matrix(childBest[["beta"]])
+testMatrix = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test)
+#predictions = predict(childBest, newx = testMatrix, type = "class")
+#hotel_dev_test %>% mutate(childPred3 = predict(childBest, newx = testMatrix, type = "class"))
+hotel_dev_test = mutate(.data = hotel_dev_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
+confusedBestChild = table(y = hotel_dev_test$children, yhat_Lasso = hotel_dev_test$childPred3)
+
 
 #Basic Model
 
@@ -330,8 +372,9 @@ model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_gu
 
 hotel_dev_test = mutate(.data = hotel_dev_test, yhat1 = predict(model1, hotel_dev_test, type='response')) %>% 
   mutate(.data = hotel_dev_test, childPred1 =  ifelse(yhat1 > 0.2, 1, 0))
+confusedBasicChild = table(y = hotel_dev_test$children , yhat_Basic = hotel_dev_test$childPred1)
 
-confusedBasicChild = table(y = hotel_dev_test$children , yhat = hotel_dev_test$childPred)
+confusedBasicChild = table(y = hotel_dev_test$children , yhat = hotel_dev_test$childPred1)
 
 confusedBasicChild
 
@@ -339,9 +382,18 @@ confusedBasicChild
 model2 = glm(children ~. - arrival_date, family = "binomial", hotel_dev_train)
 hotel_dev_test = mutate(.data = hotel_dev_test, yhat2 = predict(model2, hotel_dev_test, type='response')) %>% 
   mutate(.data = hotel_dev_test, childPred2 =  ifelse(yhat2 > 0.5, 1, 0))
-confusedBigChild = table(y = hotel_dev_test$children, yhat = hotel_dev_test$childPred2)
+confusedBigChild = table(y = hotel_dev_test$children, yhat_Logit = hotel_dev_test$childPred2)
 confusedBigChild
 
+
+confusedBestChild
+###################################################### lable confusion matrices better
+```
+
+
+#lasso testing
+```{r lasso, include=FALSE}
+#knitr::opts_chunk$set(echo = F)
 #Best Model (Lasso)
 # scx = model.matrix(FAIL ~ .-1, data=semiconductor) # do -1 to drop intercept!
 # scy = semiconductor$FAIL
@@ -369,6 +421,7 @@ childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
 #lasso testing
 ```{r lasso, include=TRUE}
 knitr::opts_chunk$set(echo = F)
+
 library(glmnet)
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
@@ -380,6 +433,8 @@ hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
 hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
 hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
 hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
+hotel_dev$arrival_date =  ymd(hotel_dev$arrival_date)
+#typeof(hotel_dev$arrival_date)
 
 hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
 hotel_dev_train = training(hotel_dev_split)
@@ -388,31 +443,34 @@ hotel_dev_test = testing(hotel_dev_split)
 # y <- mtcars$hp
 # x <- data.matrix(mtcars[, c('mpg', 'wt', 'drat', 'qsec')])
 childY <- hotel_dev_train$children
-childX <- model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
-childMatrix= t(model.matrix(children ~ .-arrival_date-1, data = hotel_dev_test))
-randomcrap = model_matrix(children ~ reserved_room_type, data = hotel_dev_test)
+childX <- model.matrix(children ~ . -1, data = hotel_dev_train)
+childMatrix= t(model.matrix(children ~ .-1, data = hotel_dev_test))
+#randomcrap = model_matrix(children ~ reserved_room_type, data = hotel_dev_test)
 # #fit lasso regression model using k-fold cross-validation
 # cv_model <- cv.glmnet(x, y, alpha = 1)
 # best_lambda <- cv_model$lambda.min
-childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", numfold = 5, trace.it = 1, standardize = FALSE)
-best_lambda <- childLasso$lambda.min
+childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
+best_lambda <- as.numeric(childLasso$lambda.min)
 
 # #display optimal lambda value
 # best_lambda
 
 # #view plot of test MSE's vs. lambda values
 # plot(cv_model)
-plot(childLasso)
+#plot(childLasso)
 # #view coefficients of best model
 # best_model <- glmnet(x, y, alpha = 1, lambda = best_lambda)
 # coef(best_model)
 ################################
 
-childBest <- glmnet(childX,childY,alpha = 1, lambda = best_lambda, family = "binomial", numfold = 5, trace.it = 1, standardize = FALSE)
-BetaKids = as.matrix(childBest[["beta"]])
-testMatrix = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test)
-predictions = predict(childBest, newx = testMatrix)
-
+#childBest <- glmnet(childX,childY,alpha = 1, lambda = best_lambda , family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
+#BetaKids = as.matrix(childBest[["beta"]])
+testMatrix = model.matrix(children ~ . -1, data = hotel_dev_test)
+#predictions = predict(childBest, newx = testMatrix, type = "class")
+#hotel_dev_test %>% mutate(childPred3 = predict(childBest, newx = testMatrix, type = "class"))
+hotel_dev_test = mutate(.data = hotel_dev_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
+confusedBestChild = table(y = hotel_dev_test$children, yhat = hotel_dev_test$childPred3)
+confusedBestChild
 
 ################################
 # traintest=rbind(training,testing)
@@ -451,3 +509,15 @@ predictions = predict(childBest, newx = testMatrix)
 
 
 
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
