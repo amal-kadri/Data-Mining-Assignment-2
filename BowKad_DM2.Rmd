@@ -82,20 +82,26 @@ ggplot(capmetro) +
 
 #Number 2
 ```{r}
+#Data Cleaning
+
 saratoga = (SaratogaHouses)
 
-head(saratoga)
 saratoga$centralAir = ifelse(saratoga$centralAir == "Yes",1,0)
 saratoga$centralAir = as.numeric(saratoga$centralAir)
+
+#Lasso Regression
+
 houseX = model.matrix(price~(.- pctCollege - sewer - waterfront - landValue - newConstruction -heating - fuel- sewer)^2, data = saratoga)[,-1] 
-class(saratoga$centralAir)
+
 houseY = saratoga$price
 
 houseLasso = gamlr(houseX, houseY, alpha = 1)
 plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 houseCoef = coef(houseLasso)
-houseCoef
+
+#Soft Code Betas
+
 coefData = houseCoef %>% 
   as.matrix() %>%
   as.data.frame()
@@ -110,9 +116,13 @@ f <- as.formula(
         paste(coef_vector, collapse = " + "), 
         sep = " ~ "))
 
+#KNN Split
+
 saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
+
+
 
 lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
 
