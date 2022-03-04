@@ -139,7 +139,7 @@ colnames(Xtest)
 
 Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction - 1, data=saratoga_train)
 
-Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction, data=saratoga_test)
+Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction - 1, data=saratoga_test)
 
 ytrain = saratoga_train$price
 ytest = saratoga_test$price
