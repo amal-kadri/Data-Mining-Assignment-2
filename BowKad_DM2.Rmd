@@ -115,7 +115,7 @@ houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - water
 houseY = saratoga$price
 
 houseLasso = gamlr(houseX, houseY, alpha = 1)
-plot(houseLasso)
+#plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 houseCoef = coef(houseLasso)
 
@@ -394,20 +394,20 @@ hotel_val_test = testing(hotel_val_split)
 
 
 childY <- hotel_dev_train$children
-childX <- model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
+childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev_train)
 
 childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
 
 #test matrix
-valTestMatrix = model.matrix(children ~ .-arrival_date - 1, data = hotel_val_test)
+valTestMatrix = model.matrix(children ~ (.-arrival_date)^2 - 1, data = hotel_val_test)
 roomL = hotel_val_test %>% select(children,assigned_room_type) %>% 
   mutate(assigned_room_typeL = ifelse(assigned_room_type == "L",1,0))
 roomLMatrix = model_matrix(children ~ assigned_room_typeL - 1, data = roomL)
 valTestMatrix = as.matrix(cbind(valTestMatrix,roomLMatrix))
 hotel_val_test = mutate(.data = hotel_val_test,
-                        childPred3 = predict(childLasso, newx=valTestMatrix,
-                                             type = "response", s = 'lambda.min')) %>% 
-  mutate(.data = hotel_val_test, childPred3 =  ifelse(yhat > 0.5, 1, 0))
+                        childProb3 = predict(childLasso, newx=valTestMatrix,
+                                             type = "response", s = 'lambda.min'))
+hotel_val_test = hotel_val_test %>% mutate(.data = hotel_val_test, childPred3 =  ifelse(childProb3 > 0.5, 1, 0))
 confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
 confusedBestChild
 
