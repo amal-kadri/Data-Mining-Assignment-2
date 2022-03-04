@@ -132,11 +132,6 @@ saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
 
-colnames(Xtrain)
-colnames(Xtest)
-
-# not_model = for Xtestif colnames(Xtest) not in colnames(Xtrain)
-
 Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction - 1, data=saratoga_train)
 
 Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction - 1, data=saratoga_test)
@@ -145,8 +140,23 @@ ytrain = saratoga_train$price
 ytest = saratoga_test$price
 
 scale_train = apply(Xtrain, 2, sd)
-Xtilde_train = scale(Xtrain, scale = scale_train)
-Xtilde_test = scale(Xtest, scale = scale_train)
+
+folds_train_scale <- Xtrain %>% 
+  scale(scale = scale_train) %>% 
+  bind_cols(price = ytrain) %>% 
+  as.data.frame(select(price, everything()))
+
+folds_test_scale <- Xtest %>% 
+  scale(scale = scale_train) %>% 
+  bind_cols(price = ytest) %>% 
+  as.data.frame(select(price, everything()))
+
+klist <- foreach(K = 2:100, .combine = 'c') %do%{
+  knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
+    modelr::rmse(data = folds_test_scale)
+  }
+}
+
 
 k_grid = c(2:100)
 K_folds = 5
