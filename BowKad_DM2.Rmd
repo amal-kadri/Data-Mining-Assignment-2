@@ -121,6 +121,10 @@ f <- as.formula(
 
 lmLasso = eval(bquote(lm(.(f), data = saratoga)))
 
+#Medium Linear Model
+
+lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
+
 #KNN Split
 
 saratoga_split = initial_split(saratoga, prop = 0.8)
@@ -134,9 +138,9 @@ Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age 
 ytrain = saratoga_train$price
 ytest = saratoga_test$price
 
-lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
-
-
+scale_train = apply(Xtrain, 2, sd)
+Xtilde_train = scale(Xtrain, scale = scale_train)
+Xtilde_test = scale(Xtest, scale = scale_train)
 
 k_grid = c(2:100)
 K_folds = 5
