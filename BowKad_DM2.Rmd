@@ -39,7 +39,7 @@ hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```
 #1a
-```{r #1a, include=FALSE}
+```{r #1a, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
@@ -68,7 +68,7 @@ ggplot(avg_board) +
 ```
 
 #1b
-```{r #1b, include=FALSE}
+```{r #1b, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
 temp_board = capmetro %>%
@@ -83,7 +83,7 @@ ggplot(capmetro) +
 ```
 
 #Number 2
-```{r #Number 2, include=FALSE}
+```{r #Number 2, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
 #Data Cleaning
@@ -257,7 +257,7 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 ```
 
 #Number 3
-```{r #Number 3, include=FALSE}
+```{r #Number 3, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 kredit = read.csv(here("data", "german_credit.csv"))
 kredit$Good = ifelse(kredit$history == "good",1,0)
@@ -299,7 +299,7 @@ confusion_out_logit
 
 ```
 
-```{r #Number 4, include=FALSE}
+```{r #Number 4, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
@@ -355,7 +355,7 @@ childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
 
 ```
 #lasso testing
-```{r lasso, include=FALSE}
+```{r lasso, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 library(glmnet)
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
@@ -426,15 +426,15 @@ predictions = predict(childBest, newx = testMatrix)
 ```
 #saved code
 ```{r}
-
-traintest = rbind(hotel_dev_train, hotel_dev_test)
-X = sparse.model.matrix(as.formula(paste(children ~ paste(colnames(hotel_dev_train[,-1]), sep = "", collapse=" +"))), data = traintest)
-modelChild = cv.glmnet(X[1:nrow(hotel_dev_train),], hotel_dev_train[,1], family = "binomial", type.measure = "auc", nfolds = 10)
-modelChild$lambda.min
-plot(modelChild)
-predChild = predict(modelChild, s = 'lambda.min', newx = X[-(1:nrow(hotel_dev_train)),], type = "response")
-rmse(predChild)
-pred = predict.(model, s='lambda.min', newx=X[-(1:nrow(training)),], type="response")
+# 
+# traintest = rbind(hotel_dev_train, hotel_dev_test)
+# X = sparse.model.matrix(as.formula(paste(children ~ paste(colnames(hotel_dev_train[,-1]), sep = "", collapse=" +"))), data = traintest)
+# modelChild = cv.glmnet(X[1:nrow(hotel_dev_train),], hotel_dev_train[,1], family = "binomial", type.measure = "auc", nfolds = 10)
+# modelChild$lambda.min
+# plot(modelChild)
+# predChild = predict(modelChild, s = 'lambda.min', newx = X[-(1:nrow(hotel_dev_train)),], type = "response")
+# rmse(predChild)
+# pred = predict.(model, s='lambda.min', newx=X[-(1:nrow(training)),], type="response")
 ```
 
 
