@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
-```{r}
+```{r lib, include=FALSE}
+knitr::opts_chunk$set(echo = F)
 library(tidyverse)
 library(ggplot2)
 library(rsample)
@@ -38,8 +39,8 @@ hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```
 #1a
-```{r setup, include=True}
-knitr::opts_chunk$set(echo = FALSE)
+```{r #1a, include=FALSE}
+knitr::opts_chunk$set(echo = F)
 
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
 capmetro = capmetro %>%
@@ -67,9 +68,8 @@ ggplot(avg_board) +
 ```
 
 #1b
-```{r setup, include=True}
-
-knitr::opts_chunk$set(echo = FALSE)
+```{r #1b, include=FALSE}
+knitr::opts_chunk$set(echo = F)
 
 temp_board = capmetro %>%
   group_by(hour_of_day) %>%
@@ -83,7 +83,9 @@ ggplot(capmetro) +
 ```
 
 #Number 2
-```{r}
+```{r #Number 2, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+
 #Data Cleaning
 
 saratoga = (SaratogaHouses)
@@ -122,22 +124,22 @@ coefData = cbind(newColName = rownames(coefData), coefData)
 coef_vector = as.vector(coefData[2:nrow(coefData),1])
 f <- as.formula(
   paste("price", 
-        paste(coef_vector, collapse = " + "), 
+        paste(coef_vector, collapse = "+"), 
         sep = " ~ "))
 
 #Optimal Lasso
 
 lmLasso = eval(bquote(lm(.(f), data = saratoga)))
 
-#Medium Linear Model
-
-lm2 = lm(price ~ . - pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction, data=saratoga_train)
-
 #KNN Split
 
 saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
+
+#Medium Linear Model
+
+lm2 = lm(price ~ . - pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction, data=saratoga_train)
 
 Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfront + newConstruction - 1, data=saratoga_train)
 
@@ -187,77 +189,76 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 
 ```
 
-```{r}
-
-# KNN MODELS
-nfold = 5
-
-saratoga_folds <- SaratogaHouses %>%
-  mutate(fold_id = rep(1:nfold, length=nrow(SaratogaHouses)) %>% sample)
-
-rmse_cv <- foreach(fold = 1:nfold, .combine='c') %do% {
-  # looping over fold_id
-  folds_train <- saratoga_folds %>% 
-    filter(fold_id != fold)
-  folds_test <- saratoga_folds %>% 
-    filter(fold_id == fold)
-  
-  # separate out response
-  ytrain = folds_train$price
-  ytest = folds_test$price
-  
-  # separate out features for scaling by sd of TRAIN set
-  xtrain = model.matrix(~ . - 1 - price, data=folds_train)
-  xtest = model.matrix(~ . - 1 - price, data=folds_test)
-  
-  scale_train = apply(xtrain, 2, sd)
-  
-  # TRAIN
-  # a pipe that:
-  #   scales TRAINING features by TRAINING sds
-  #   recombines scaled features with un-scaled TRAIN y response 
-  folds_train_scale <- xtrain %>% 
-    scale(scale = scale_train) %>% 
-    bind_cols(price = ytrain) %>% 
-    as.data.frame(select(price, everything()))
-  
-  # TEST
-  # a pipe that:
-  #   scales TESTING features by TRAINING sds
-  #   recombines scaled features with un-scaled TEST y response
-  folds_test_scale <- xtest %>% 
-    scale(scale = scale_train) %>%
-    bind_cols(price = ytest) %>% 
-    as.data.frame(select(price, everything()))
-  
-  klist <- foreach(K = 2:100, .combine = 'c') %do%{
-  knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
-    modelr::rmse(data = folds_test_scale)
-  }
-}
-
-rmse_matrix <- as.data.frame(rmse_cv) %>% 
-  mutate(fold = case_when(row_number() < 100 ~ 1, 
-                          row_number() >= 100 & row_number() < 200 ~ 2, 
-                          row_number() >= 200 & row_number() < 300 ~ 3, 
-                          row_number() >= 300 & row_number() < 400 ~ 4, 
-                          row_number() >= 400 & row_number() < 500 ~ 5), 
-         k = case_when(row_number() < 100 ~ row_number() + 1, 
-                      row_number() >= 100 & row_number() < 200 ~ row_number() - 99, 
-                      row_number() >= 200 & row_number() < 300 ~ row_number() - 199, 
-                      row_number() >= 300 & row_number() < 400 ~ row_number() - 299, 
-                      row_number() >= 400 & row_number() < 500 ~ row_number() - 399)) %>% 
-  group_by(k) %>% 
-  summarise(mean_rmse = mean(rmse_cv)) %>% 
-  arrange(mean_rmse)
-
-k_optimal <- rmse_matrix$k[1]
+```{r David, include=FALSE}
+# knitr::opts_chunk$set(echo = F)
+# # KNN MODELS
+# nfold = 5
+# 
+# saratoga_folds <- SaratogaHouses %>%
+#   mutate(fold_id = rep(1:nfold, length=nrow(SaratogaHouses)) %>% sample)
+# 
+# rmse_cv <- foreach(fold = 1:nfold, .combine='c') %do% {
+#   # looping over fold_id
+#   folds_train <- saratoga_folds %>% 
+#     filter(fold_id != fold)
+#   folds_test <- saratoga_folds %>% 
+#     filter(fold_id == fold)
+#   
+#   # separate out response
+#   ytrain = folds_train$price
+#   ytest = folds_test$price
+#   
+#   # separate out features for scaling by sd of TRAIN set
+#   xtrain = model.matrix(~ . - 1 - price, data=folds_train)
+#   xtest = model.matrix(~ . - 1 - price, data=folds_test)
+#   
+#   scale_train = apply(xtrain, 2, sd)
+#   
+#   # TRAIN
+#   # a pipe that:
+#   #   scales TRAINING features by TRAINING sds
+#   #   recombines scaled features with un-scaled TRAIN y response 
+#   folds_train_scale <- xtrain %>% 
+#     scale(scale = scale_train) %>% 
+#     bind_cols(price = ytrain) %>% 
+#     as.data.frame(select(price, everything()))
+#   
+#   # TEST
+#   # a pipe that:
+#   #   scales TESTING features by TRAINING sds
+#   #   recombines scaled features with un-scaled TEST y response
+#   folds_test_scale <- xtest %>% 
+#     scale(scale = scale_train) %>%
+#     bind_cols(price = ytest) %>% 
+#     as.data.frame(select(price, everything()))
+#   
+#   klist <- foreach(K = 2:100, .combine = 'c') %do%{
+#   knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
+#     modelr::rmse(data = folds_test_scale)
+#   }
+# }
+# 
+# rmse_matrix <- as.data.frame(rmse_cv) %>% 
+#   mutate(fold = case_when(row_number() < 100 ~ 1, 
+#                           row_number() >= 100 & row_number() < 200 ~ 2, 
+#                           row_number() >= 200 & row_number() < 300 ~ 3, 
+#                           row_number() >= 300 & row_number() < 400 ~ 4, 
+#                           row_number() >= 400 & row_number() < 500 ~ 5), 
+#          k = case_when(row_number() < 100 ~ row_number() + 1, 
+#                       row_number() >= 100 & row_number() < 200 ~ row_number() - 99, 
+#                       row_number() >= 200 & row_number() < 300 ~ row_number() - 199, 
+#                       row_number() >= 300 & row_number() < 400 ~ row_number() - 299, 
+#                       row_number() >= 400 & row_number() < 500 ~ row_number() - 399)) %>% 
+#   group_by(k) %>% 
+#   summarise(mean_rmse = mean(rmse_cv)) %>% 
+#   arrange(mean_rmse)
+# 
+# k_optimal <- rmse_matrix$k[1]
 ```
 
-
-
 #Number 3
-```{r}
+```{r #Number 3, include=FALSE}
+knitr::opts_chunk$set(echo = F)
 kredit = read.csv(here("data", "german_credit.csv"))
 kredit$Good = ifelse(kredit$history == "good",1,0)
 kredit$Poor = ifelse(kredit$history == "poor",1,0)
@@ -298,7 +299,9 @@ confusion_out_logit
 
 ```
 
-```{r}
+```{r #Number 4, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 
@@ -308,7 +311,7 @@ hotel_dev_test = testing(hotel_dev_split)
 
 #Basic Model
 model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, family = "binomial", hotel_dev_train)
-hotel_dev_test = mutate(.data = hotel_dev_test, yhat = predict(model1, hotel_dev_test, type='response')) %>% 
+hotel_dev_test = mutate(.data = hotel_dev_test, yhat1 = predict(model1, hotel_dev_test, type='response')) %>% 
   mutate(.data = hotel_dev_test, childPred1 =  ifelse(yhat1 > 0.2, 1, 0))
 
 confusedBasicChild = table(y = hotel_dev_test$children , yhat = hotel_dev_test$childPred)
@@ -340,7 +343,7 @@ childX = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
 childY = hotel_dev_train$children
 childMatrix= t(model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test))
 childLasso = gamlr(childX,childY, family = "binomial")
-childPred3 = predict(childLasso, childMatrix, select="min")
+# childPred3 = predict(childLasso, childMatrix, select="min")
 childCoef = coef(childLasso)
 plot(childLasso)
 childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
@@ -352,7 +355,8 @@ childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
 
 ```
 #lasso testing
-```{r}
+```{r lasso, include=FALSE}
+knitr::opts_chunk$set(echo = F)
 library(glmnet)
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
