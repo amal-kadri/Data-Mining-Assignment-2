@@ -177,6 +177,74 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 
 ```
 
+```{r}
+# KNN MODELS
+nfold = 5
+
+saratoga_folds <- SaratogaHouses %>%
+  mutate(fold_id = rep(1:nfold, length=nrow(SaratogaHouses)) %>% sample)
+
+rmse_cv <- foreach(fold = 1:nfold, .combine='c') %do% {
+  # looping over fold_id
+  folds_train <- saratoga_folds %>% 
+    filter(fold_id != fold)
+  folds_test <- saratoga_folds %>% 
+    filter(fold_id == fold)
+  
+  # separate out response
+  ytrain = folds_train$price
+  ytest = folds_test$price
+  
+  # separate out features for scaling by sd of TRAIN set
+  xtrain = model.matrix(~ . - 1 - price, data=folds_train)
+  xtest = model.matrix(~ . - 1 - price, data=folds_test)
+  
+  scale_train = apply(xtrain, 2, sd)
+  
+  # TRAIN
+  # a pipe that:
+  #   scales TRAINING features by TRAINING sds
+  #   recombines scaled features with un-scaled TRAIN y response 
+  folds_train_scale <- xtrain %>% 
+    scale(scale = scale_train) %>% 
+    bind_cols(price = ytrain) %>% 
+    as.data.frame(select(price, everything()))
+  
+  # TEST
+  # a pipe that:
+  #   scales TESTING features by TRAINING sds
+  #   recombines scaled features with un-scaled TEST y response
+  folds_test_scale <- xtest %>% 
+    scale(scale = scale_train) %>%
+    bind_cols(price = ytest) %>% 
+    as.data.frame(select(price, everything()))
+  
+  klist <- foreach(K = 2:100, .combine = 'c') %do%{
+  knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
+    modelr::rmse(data = folds_test_scale)
+  }
+}
+
+rmse_matrix <- as.data.frame(rmse_cv) %>% 
+  mutate(fold = case_when(row_number() < 100 ~ 1, 
+                          row_number() >= 100 & row_number() < 200 ~ 2, 
+                          row_number() >= 200 & row_number() < 300 ~ 3, 
+                          row_number() >= 300 & row_number() < 400 ~ 4, 
+                          row_number() >= 400 & row_number() < 500 ~ 5), 
+         k = case_when(row_number() < 100 ~ row_number() + 1, 
+                      row_number() >= 100 & row_number() < 200 ~ row_number() - 99, 
+                      row_number() >= 200 & row_number() < 300 ~ row_number() - 199, 
+                      row_number() >= 300 & row_number() < 400 ~ row_number() - 299, 
+                      row_number() >= 400 & row_number() < 500 ~ row_number() - 399)) %>% 
+  group_by(k) %>% 
+  summarise(mean_rmse = mean(rmse_cv)) %>% 
+  arrange(mean_rmse)
+
+k_optimal <- rmse_matrix$k[1]
+```
+
+
+
 #Number 3
 ```{r}
 kredit = read.csv(here("data", "german_credit.csv"))
