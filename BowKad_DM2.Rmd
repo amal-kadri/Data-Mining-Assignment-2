@@ -42,6 +42,8 @@ hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```{r #1a, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
+#clean data
+
 capmetro = read.csv(here("data", "capmetro_UT.csv"))
 capmetro = capmetro %>%
   mutate(date_time = ymd_hms(timestamp))
@@ -52,10 +54,14 @@ capmetro = capmetro %>%
 
 capmetro$day_of_week = factor(capmetro$day_of_week, levels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
 
+#group data
+
 avg_board = capmetro %>% 
   group_by(hour_of_day, day_of_week, month) %>% 
   summarize(avg_pass = mean(boarding), .groups = 'drop') %>% 
   arrange(hour_of_day, day_of_week, month)
+
+#plot data
 
 ggplot(avg_board) +
   geom_line(aes(x = hour_of_day, y = avg_pass, col = month)) + 
@@ -68,9 +74,13 @@ ggplot(avg_board) +
 ```{r #1b, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
+#group data
+
 temp_board = capmetro %>%
   group_by(hour_of_day) %>%
   summarise(mean = mean(boarding))
+
+#plot data
 
 ggplot(capmetro) +
   geom_point(aes(x=temperature, y = boarding, col = weekend), size = .05) +
@@ -82,7 +92,7 @@ ggplot(capmetro) +
 ```{r #Number 2, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
-#Data Cleaning
+#data cleaning
 
 saratoga = (SaratogaHouses)
 
@@ -95,7 +105,8 @@ saratoga = saratoga %>%
 saratoga = saratoga %>% 
   mutate(nosewer = ifelse(sewer == "none", 1,0))
 saratoga = subset(saratoga, select = -c(sewer))
-#Lasso Regression
+
+#lasso regression
 
 houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction -heating - fuel)^2, data = saratoga)[,-1] 
 
@@ -106,7 +117,7 @@ plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 houseCoef = coef(houseLasso)
 
-#Soft Code Betas
+#soft code beta values
 
 coefData = houseCoef %>% 
   as.matrix() %>%
@@ -121,21 +132,21 @@ f <- as.formula(
         paste(coef_vector, collapse = "+"), 
         sep = " ~ "))
 
-#Optimal Lasso
+#optimal lasso
 
 lmLasso = eval(bquote(lm(.(f), data = saratoga)))
 
-#KNN Split
+#KNN split
 
 saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
 
-#Medium Linear Model
+#medium linear model
 
 lm2 = lm(price ~ . - pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction, data=saratoga_train)
 
-#KNN Scale
+#KNN scale
 
 Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfront + newConstruction - 1, data=saratoga_train)
 
@@ -156,13 +167,14 @@ folds_test_scale <- Xtest %>%
   bind_cols(price = ytest) %>% 
   as.data.frame(select(price, everything()))
 
+#k fold cross validation
+
 k_grid = c(2:100)
 K_folds = 5
 houseKNN = crossv_kfold(folds_train_scale, k = K_folds)
 houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
                                            + bedrooms + bathrooms + age, k= 20,
                                            data = .))
-#models = map(houseKNN$train, ~ knnreg(price ~ lotSize, k=100, data = ., use.all=FALSE))
 
 cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
   houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
@@ -172,12 +184,13 @@ cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
   c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
   }
 
-#houseMin = round(min(cv_House$err))
 houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
 
 minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
       + bedrooms + bathrooms + age+ pubsewer + septic + nosewer
       + waterfrontNo + waterfrontYes +newConstructionNo,k=houseMinK, data = .))
+
+# RMSE
 
 rmse(lm2, saratoga_test)
 rmse(lmLasso, saratoga_test)
@@ -256,10 +269,14 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 ```{r #Number 3, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
+#clean data
+
 kredit = read.csv(here("data", "german_credit.csv"))
 kredit$Good = ifelse(kredit$history == "good",1,0)
 kredit$Poor = ifelse(kredit$history == "poor",1,0)
 kredit$Terrible = ifelse(kredit$history == "terrible",1,0)
+
+#group data
 
 credHistory = kredit%>%
   group_by(history)%>%
@@ -270,6 +287,7 @@ ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood))
 
 #glm
+
 kredit_split = initial_split(kredit, prop = 0.8)
 kredit_train = training(kredit_split)
 kredit_test = testing(kredit_split)
