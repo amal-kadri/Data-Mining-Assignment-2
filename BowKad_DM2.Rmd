@@ -100,7 +100,7 @@ saratoga = subset(saratoga, select = -c(sewer))
 saratoga
 #Lasso Regression
 
-houseX = model.matrix(price~(.- pctCollege - sewer - waterfront - landValue - newConstruction -heating - fuel- sewer)^2, data = saratoga)[,-1] 
+houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction -heating - fuel)^2, data = saratoga)[,-1] 
 
 houseY = saratoga$price
 
@@ -139,9 +139,9 @@ saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
 
-Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction - 1, data=saratoga_train)
+Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfront + newConstruction - 1, data=saratoga_train)
 
-Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction - 1, data=saratoga_test)
+Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfront + newConstruction - 1, data=saratoga_test)
 
 ytrain = saratoga_train$price
 ytest = saratoga_test$price
@@ -168,7 +168,7 @@ houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea
 
 cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
   houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age + sewerseptic + sewerpublic/commercial + sewernone + waterfront + newConstruction, k=k,
+                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes + waterfrontNo + newConstructionNo, k=k,
                                            data = ., use.all = FALSE))
   houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
   c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
