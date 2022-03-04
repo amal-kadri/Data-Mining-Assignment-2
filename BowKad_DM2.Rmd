@@ -131,7 +131,7 @@ lmLasso = eval(bquote(lm(.(f), data = saratoga)))
 
 #Medium Linear Model
 
-lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
+lm2 = lm(price ~ . - pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction, data=saratoga_train)
 
 #KNN Split
 
@@ -174,20 +174,12 @@ cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
   c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
   }
 
-klist <- foreach(K = k_grid, .combine = 'c') %do%{
-  knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
-    modelr::rmse(data = folds_test_scale)
-  }
-}
-
-
-
 #houseMin = round(min(cv_House$err))
 houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
 
 minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-      + bedrooms + bathrooms + age+ sewer
-      + waterfront +newConstruction,k=houseMinK, data = .))
+      + bedrooms + bathrooms + age+ pubsewer + septic + nosewer
+      + waterfrontNo + waterfrontYes +newConstructionNo,k=houseMinK, data = .))
 
 rmse(lm2, saratoga_test)
 rmse(lmLasso, saratoga_test)
