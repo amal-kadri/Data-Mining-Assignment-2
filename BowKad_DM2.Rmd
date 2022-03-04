@@ -287,7 +287,8 @@ credHistory = kredit%>%
   mutate(default_liklihood = numDefault/count)
 
 ggplot(credHistory)+
-  geom_col(aes(x = history, y = default_liklihood))
+  geom_col(aes(x = history, y = default_liklihood)) + ggtitle("Default Likelihood by Credit History") +
+  xlab("Credit History") + ylab("Default Likelihood")
 
 #glm
 
