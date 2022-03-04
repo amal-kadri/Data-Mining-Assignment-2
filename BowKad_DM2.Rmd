@@ -151,7 +151,7 @@ folds_test_scale <- Xtest %>%
   bind_cols(price = ytest) %>% 
   as.data.frame(select(price, everything()))
 
-klist <- foreach(K = 2:100, .combine = 'c') %do%{
+klist <- foreach(K = k_grid, .combine = 'c') %do%{
   knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
     modelr::rmse(data = folds_test_scale)
   }
