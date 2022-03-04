@@ -78,7 +78,6 @@ temp_board = capmetro %>%
 ggplot(capmetro) +
   geom_point(aes(x=temperature, y = boarding, col = weekend), size = .05) +
   facet_wrap(~hour_of_day)
-#fuck with dotsize and label this shiut
 ```
 
 #Number 2
@@ -139,12 +138,13 @@ cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
 houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
 
 minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age+ sewer
-                                           + waterfront + newConstruction, k= houseMinK,
-                                           data = .))
+      + bedrooms + bathrooms + age+ sewer
+      + waterfront +newConstruction,k=houseMinK, data = .))
+
 rmse(lm2, saratoga_test)
 rmse(lmLasso, saratoga_test)
 map2_dbl(minKModel, houseKNN$test, modelr::rmse)
+
 ```
 
 #Number 3
