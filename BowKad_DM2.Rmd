@@ -61,7 +61,8 @@ avg_board
 
 ggplot(avg_board) +
   geom_line(aes(x = hour_of_day, y = avg_pass, col = month)) + 
-  facet_wrap(~day_of_week)
+  facet_wrap(~day_of_week) + ggtitle("Average Boardings") +
+  xlab("Average Passengers") + ylab("Hour of Day")
   
 ```
 
@@ -77,26 +78,32 @@ temp_board = capmetro %>%
 
 ggplot(capmetro) +
   geom_point(aes(x=temperature, y = boarding, col = weekend), size = .05) +
-  facet_wrap(~hour_of_day)
-#fuck with dotsize and label this shiut
+  facet_wrap(~hour_of_day) + ggtitle("Average Boardings by Temperature") +
+  xlab("Temperature") + ylab("Boardings")
 ```
 
 #Number 2
 ```{r}
+#Data Cleaning
+
 saratoga = (SaratogaHouses)
 
-head(saratoga)
 saratoga$centralAir = ifelse(saratoga$centralAir == "Yes",1,0)
 saratoga$centralAir = as.numeric(saratoga$centralAir)
+
+#Lasso Regression
+
 houseX = model.matrix(price~(.- pctCollege - sewer - waterfront - landValue - newConstruction -heating - fuel- sewer)^2, data = saratoga)[,-1] 
-class(saratoga$centralAir)
+
 houseY = saratoga$price
 
 houseLasso = gamlr(houseX, houseY, alpha = 1)
 plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 houseCoef = coef(houseLasso)
-houseCoef
+
+#Soft Code Betas
+
 coefData = houseCoef %>% 
   as.matrix() %>%
   as.data.frame()
@@ -111,13 +118,35 @@ f <- as.formula(
         paste(coef_vector, collapse = " + "), 
         sep = " ~ "))
 
+#Optimal Lasso
+
+lmLasso = eval(bquote(lm(.(f), data = saratoga)))
+
+#Medium Linear Model
+
+lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
+
+#KNN Split
+
 saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
 
-lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
+colnames(Xtrain)
+colnames(Xtest)
 
-lmLasso = eval(bquote(lm(.(f), data = saratoga)))
+# not_model = for Xtestif colnames(Xtest) not in colnames(Xtrain)
+
+Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction - 1, data=saratoga_train)
+
+Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction, data=saratoga_test)
+
+ytrain = saratoga_train$price
+ytest = saratoga_test$price
+
+scale_train = apply(Xtrain, 2, sd)
+Xtilde_train = scale(Xtrain, scale = scale_train)
+Xtilde_test = scale(Xtest, scale = scale_train)
 
 k_grid = c(2:100)
 K_folds = 5
@@ -139,12 +168,13 @@ cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
 houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
 
 minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age+ sewer
-                                           + waterfront + newConstruction, k= houseMinK,
-                                           data = .))
+      + bedrooms + bathrooms + age+ sewer
+      + waterfront +newConstruction,k=houseMinK, data = .))
+
 rmse(lm2, saratoga_test)
 rmse(lmLasso, saratoga_test)
 map2_dbl(minKModel, houseKNN$test, modelr::rmse)
+
 ```
 
 #Number 3
