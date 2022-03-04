@@ -305,16 +305,14 @@ yhat_test = ifelse(credPredict > 0.5, 1, 0)
 kredit_test =  mutate(.data = kredit_test, yhat_t = ifelse(yhat > 0.5, 1, 0))
 confusion_out_logit = table(y = kredit_test$Default,
                             yhat = kredit_test$yhat_t)
-
+kredit_test
 confusion_out_logit
 
 confusion_rate = (confusion_out_logit/sum(confusion_out_logit))
 confusion_rate
 
-#make ROC curve
-
 ```
-
+####Number 4dev
 ```{r #Number 4, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
@@ -338,30 +336,11 @@ hotel_dev_test = testing(hotel_dev_split)
 #Matrices
 childY <- hotel_dev_train$children
 childX <- model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
-childMatrix= t(model.matrix(children ~ .-1, data = hotel_dev_train))
-#randomcrap = model_matrix(children ~ reserved_room_type, data = hotel_dev_test)
-# #fit lasso regression model using k-fold cross-validation
-# cv_model <- cv.glmnet(x, y, alpha = 1)
-# best_lambda <- cv_model$lambda.min
+
 childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
-best_lambda <- as.numeric(childLasso$lambda.min)
 
-# #display optimal lambda value
-# best_lambda
-
-# #view plot of test MSE's vs. lambda values
-# plot(cv_model)
-#plot(childLasso)
-# #view coefficients of best model
-# best_model <- glmnet(x, y, alpha = 1, lambda = best_lambda)
-# coef(best_model)
-################################
-
-#childBest <- glmnet(childX,childY,alpha = 1, lambda = best_lambda , family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
-#BetaKids = as.matrix(childBest[["beta"]])
 testMatrix = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test)
-#predictions = predict(childBest, newx = testMatrix, type = "class")
-#hotel_dev_test %>% mutate(childPred3 = predict(childBest, newx = testMatrix, type = "class"))
+
 hotel_dev_test = mutate(.data = hotel_dev_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
 confusedBestChild = table(y = hotel_dev_test$children, yhat_Lasso = hotel_dev_test$childPred3)
 
@@ -391,35 +370,68 @@ confusedBestChild
 ```
 
 
-#lasso testing
-```{r lasso, include=FALSE}
-#knitr::opts_chunk$set(echo = F)
-#Best Model (Lasso)
-# scx = model.matrix(FAIL ~ .-1, data=semiconductor) # do -1 to drop intercept!
-# scy = semiconductor$FAIL
-# 
-# # Note: there's also a "sparse.model.matrix"
-# # here our matrix isn't sparse.
-# # but sparse.model.matrix is a good way of doing things if you have factors.
-# 
-# # fit a single lasso
-# sclasso = gamlr(scx, scy, family="binomial")
+
+```{r}
+#data
+hotel_dev = read.csv(here("data", "hotels_dev.csv"))
+hotel_val = read.csv(here("data", "hotels_val.csv"))
+#dev factorizing
+# hotel_dev$meal =  as.factor(hotel_dev$meal)
+# hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
+# hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
+# hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
+# hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
+# hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
+# hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
+# hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
+# hotel_dev$arrival_date =  as.factor(hotel_dev$arrival_date)
+
+#val factorizing
+hotel_val$meal =  as.factor(hotel_val$meal)
+hotel_val$market_segment =  as.factor(hotel_val$market_segment)
+hotel_val$distribution_channel =  as.factor(hotel_val$distribution_channel)
+hotel_val$reserved_room_type =  as.factor(hotel_val$reserved_room_type)
+hotel_val$assigned_room_type =  as.factor(hotel_val$assigned_room_type)
+hotel_val$deposit_type =  as.factor(hotel_val$deposit_type)
+hotel_val$customer_type =  as.factor(hotel_val$customer_type)
+hotel_val$required_car_parking_spaces =  as.factor(hotel_val$required_car_parking_spaces)
+hotel_val$arrival_date =  as.factor(hotel_val$arrival_date)
+
+hotel_val_split = initial_split(hotel_val, prop = 0.8)
+hotel_val_train = training(hotel_val_split)
+hotel_val_test = testing(hotel_val_split)
+
+#test matrix
+valTestMatrix = model.matrix(children ~ (.-arrival_date - 1), data = hotel_val_test)
+roomL = hotel_val_test %>% select(children,assigned_room_type) %>% 
+  mutate(assigned_room_typeL = ifelse(assigned_room_type == "L",1,0))
+roomLMatrix = model_matrix(children ~ assigned_room_typeL - 1, data = roomL)
+valTestMatrix = as.matrix(cbind(valTestMatrix,roomLMatrix))
+hotel_val_test = mutate(.data = hotel_val_test,
+                        childPred3 = predict(childLasso, newx=valTestMatrix,
+                                             type = "class", s = 'lambda.1se'))
+confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
+confusedBestChild
+```
 
 
-childX = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
-childY = hotel_dev_train$children
-childMatrix= t(model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test))
-childLasso = gamlr(childX,childY, family = "binomial")
 
-
-childCoef = coef(childLasso)
-plot(childLasso)
-childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
-                   verb = TRUE,  family = "binomial")
 
 ```
-#lasso testing
-```{r lasso, include=TRUE}
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+##########################>
+##########################>
+####################################################>
+##########################>
+##########################>
+```{r}
 knitr::opts_chunk$set(echo = F)
 
 library(glmnet)
@@ -494,30 +506,5 @@ confusedBestChild
 # rsq <- 1 - sse/sst
 # rsq
 ```
-#saved code
-```{r}
-# 
-# traintest = rbind(hotel_dev_train, hotel_dev_test)
-# X = sparse.model.matrix(as.formula(paste(children ~ paste(colnames(hotel_dev_train[,-1]), sep = "", collapse=" +"))), data = traintest)
-# modelChild = cv.glmnet(X[1:nrow(hotel_dev_train),], hotel_dev_train[,1], family = "binomial", type.measure = "auc", nfolds = 10)
-# modelChild$lambda.min
-# plot(modelChild)
-# predChild = predict(modelChild, s = 'lambda.min', newx = X[-(1:nrow(hotel_dev_train)),], type = "response")
-# rmse(predChild)
-# pred = predict.(model, s='lambda.min', newx=X[-(1:nrow(training)),], type="response")
 ```
 
-
-
-
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
