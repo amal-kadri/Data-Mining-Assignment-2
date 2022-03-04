@@ -233,10 +233,40 @@ hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
 hotel_dev_train = training(hotel_dev_split)
 hotel_dev_test = testing(hotel_dev_split)
 
+#Basic Model
 model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, family = "binomial", hotel_dev_train)
-plot(model1)
+hotel_dev_test = mutate(.data = hotel_dev_test, yhat = predict(model1, hotel_dev_test, type='response')) %>% 
+  mutate(.data = hotel_dev_test, childPred1 =  ifelse(yhat1 > 0.2, 1, 0))
 
-hotel_dev_test = mutate(.data = hotel_dev_test, yhat = predict(model1, hotel_dev_test, type='response'))
-dev_hotel_dev_test
+confusedBasicChild = table(y = hotel_dev_test$children , yhat = hotel_dev_test$childPred)
+# kredit_test =  mutate(.data = kredit_test, yhat_t = ifelse(yhat > 0.5, 1, 0))
+# confusion_out_logit = table(y = kredit_test$Default,
+#                             yhat = kredit_test$yhat_t)
+confusedBasicChild
+
+#Big Model
+model2 = glm(children ~. - arrival_date, family = "binomial", hotel_dev_train)
+hotel_dev_test = mutate(.data = hotel_dev_test, yhat2 = predict(model2, hotel_dev_test, type='response')) %>% 
+  mutate(.data = hotel_dev_test, childPred2 =  ifelse(yhat2 > 0.5, 1, 0))
+confusedBigChild = table(y = hotel_dev_test$children, yhat = hotel_dev_test$childPred2)
+confusedBigChild
+
+#Best Model (Lasso)
+# scx = model.matrix(FAIL ~ .-1, data=semiconductor) # do -1 to drop intercept!
+# scy = semiconductor$FAIL
+# 
+# # Note: there's also a "sparse.model.matrix"
+# # here our matrix isn't sparse.
+# # but sparse.model.matrix is a good way of doing things if you have factors.
+# 
+# # fit a single lasso
+# sclasso = gamlr(scx, scy, family="binomial")
+
+childX = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
+childY = hotel_dev_train$children
+childLasso = gamlr(childX,childY, family = "binomial")
+childPred3 = predict(childLasso, hotel_dev_test, select="min")
+childCoef = coef(childLasso)
+childCoef
 ```
 
