@@ -177,6 +177,74 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 
 ```
 
+```{r}
+# KNN MODELS
+nfold = 5
+
+saratoga_folds <- SaratogaHouses %>%
+  mutate(fold_id = rep(1:nfold, length=nrow(SaratogaHouses)) %>% sample)
+
+rmse_cv <- foreach(fold = 1:nfold, .combine='c') %do% {
+  # looping over fold_id
+  folds_train <- saratoga_folds %>% 
+    filter(fold_id != fold)
+  folds_test <- saratoga_folds %>% 
+    filter(fold_id == fold)
+  
+  # separate out response
+  ytrain = folds_train$price
+  ytest = folds_test$price
+  
+  # separate out features for scaling by sd of TRAIN set
+  xtrain = model.matrix(~ . - 1 - price, data=folds_train)
+  xtest = model.matrix(~ . - 1 - price, data=folds_test)
+  
+  scale_train = apply(xtrain, 2, sd)
+  
+  # TRAIN
+  # a pipe that:
+  #   scales TRAINING features by TRAINING sds
+  #   recombines scaled features with un-scaled TRAIN y response 
+  folds_train_scale <- xtrain %>% 
+    scale(scale = scale_train) %>% 
+    bind_cols(price = ytrain) %>% 
+    as.data.frame(select(price, everything()))
+  
+  # TEST
+  # a pipe that:
+  #   scales TESTING features by TRAINING sds
+  #   recombines scaled features with un-scaled TEST y response
+  folds_test_scale <- xtest %>% 
+    scale(scale = scale_train) %>%
+    bind_cols(price = ytest) %>% 
+    as.data.frame(select(price, everything()))
+  
+  klist <- foreach(K = 2:100, .combine = 'c') %do%{
+  knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
+    modelr::rmse(data = folds_test_scale)
+  }
+}
+
+rmse_matrix <- as.data.frame(rmse_cv) %>% 
+  mutate(fold = case_when(row_number() < 100 ~ 1, 
+                          row_number() >= 100 & row_number() < 200 ~ 2, 
+                          row_number() >= 200 & row_number() < 300 ~ 3, 
+                          row_number() >= 300 & row_number() < 400 ~ 4, 
+                          row_number() >= 400 & row_number() < 500 ~ 5), 
+         k = case_when(row_number() < 100 ~ row_number() + 1, 
+                      row_number() >= 100 & row_number() < 200 ~ row_number() - 99, 
+                      row_number() >= 200 & row_number() < 300 ~ row_number() - 199, 
+                      row_number() >= 300 & row_number() < 400 ~ row_number() - 299, 
+                      row_number() >= 400 & row_number() < 500 ~ row_number() - 399)) %>% 
+  group_by(k) %>% 
+  summarise(mean_rmse = mean(rmse_cv)) %>% 
+  arrange(mean_rmse)
+
+k_optimal <- rmse_matrix$k[1]
+```
+
+
+
 #Number 3
 ```{r}
 kredit = read.csv(here("data", "german_credit.csv"))
@@ -272,4 +340,52 @@ childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
 #childCoef
 
 ```
+#lasso testing
+```{r}
+library(glmnet)
+hotel_dev = read.csv(here("data", "hotels_dev.csv"))
+hotel_val = read.csv(here("data", "hotels_val.csv"))
+
+hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
+hotel_dev_train = training(hotel_dev_split)
+hotel_dev_test = testing(hotel_dev_split)
+# #Define predictor and response variables
+# y <- mtcars$hp
+# x <- data.matrix(mtcars[, c('mpg', 'wt', 'drat', 'qsec')])
+childY <- hotel_dev_train$children
+childX <- model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
+childMatrix= t(model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test))
+# #fit lasso regression model using k-fold cross-validation
+# cv_model <- cv.glmnet(x, y, alpha = 1)
+# best_lambda <- cv_model$lambda.min
+childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", numfold = 5, trace.it = 1, standardize = FALSE)
+best_lambda <- childLasso$lambda.min
+
+# #display optimal lambda value
+# best_lambda
+
+# #view plot of test MSE's vs. lambda values
+# plot(cv_model)
+plot(childLasso)
+# #view coefficients of best model
+# best_model <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+# coef(best_model)
+################################
+childBest <- glmnet(childX,childY,alpha = 1, lambda = best_lambda, family = "binomial", numfold = 5, trace.it = 1, standardize = FALSE)
+predict(childBest, s = best_lambda, newx = hotel_dev_test)
+################################
+# #make a prediction for the response value of a new observation
+# new = matrix(c(24, 2.5, 3.5, 18.5), nrow=1, ncol=4) 
+# predict(best_model, s = best_lambda, newx = new)
+# 
+# #find R-squared of model on training data
+# y_predicted <- predict(best_model, s = best_lambda, newx = x)
+# 
+# sst <- sum((y - mean(y))^2)
+# sse <- sum((y_predicted - y)^2)
+# 
+# rsq <- 1 - sse/sst
+# rsq
+```
+
 
