@@ -78,7 +78,8 @@ temp_board = capmetro %>%
 
 ggplot(capmetro) +
   geom_point(aes(x=temperature, y = boarding, col = weekend), size = .05) +
-  facet_wrap(~hour_of_day)
+  facet_wrap(~hour_of_day) + ggtitle("Average Boardings by Temperature") +
+  xlab("Temperature") + ylab("Boardings")
 ```
 
 #Number 2
