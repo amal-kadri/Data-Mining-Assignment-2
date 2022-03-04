@@ -61,7 +61,8 @@ avg_board
 
 ggplot(avg_board) +
   geom_line(aes(x = hour_of_day, y = avg_pass, col = month)) + 
-  facet_wrap(~day_of_week)
+  facet_wrap(~day_of_week) + ggtitle("Average Boardings") +
+  xlab("Average Passengers") + ylab("Hour of Day")
   
 ```
 
