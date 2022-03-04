@@ -226,11 +226,17 @@ confusion_out_logit
 ```
 
 ```{r}
-hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
-saratoga_train = training(hotel_dev_split)
-saratoga_test = testing(hotel_dev_split)
+hotel_dev = read.csv(here("data", "hotels_dev.csv"))
+hotel_val = read.csv(here("data", "hotels_val.csv"))
 
-model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, hotel_dev, family = "binomial")
+hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
+hotel_dev_train = training(hotel_dev_split)
+hotel_dev_test = testing(hotel_dev_split)
+
+model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, family = "binomial", hotel_dev_train)
 plot(model1)
+
+hotel_dev_test = mutate(.data = hotel_dev_test, yhat = predict(model1, hotel_dev_test, type='response'))
+dev_hotel_dev_test
 ```
 
