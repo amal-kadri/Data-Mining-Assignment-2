@@ -131,7 +131,12 @@ saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
 
-Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction, data=saratoga_train)
+colnames(Xtrain)
+colnames(Xtest)
+
+# not_model = for Xtestif colnames(Xtest) not in colnames(Xtrain)
+
+Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction - 1, data=saratoga_train)
 
 Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction, data=saratoga_test)
 
