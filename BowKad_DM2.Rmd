@@ -173,14 +173,15 @@ folds_test_scale <- Xtest %>%
 
 k_grid = c(2:100)
 K_folds = 5
-houseKNN = crossv_kfold(folds_train_scale, k = K_folds)
-houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age, k= 20,
-                                           data = .))
+# houseKNN = crossv_kfold(folds_train_scale, k = K_folds)
+# houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+#                                            + bedrooms + bathrooms + age, k= 20,
+#                                            data = .))
 
 cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
-  houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes + waterfrontNo + newConstructionNo, k=k,
+  houseKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea 
+                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes
+                                           + waterfrontNo + newConstructionNo)^2, k=k,
                                            data = ., use.all = FALSE))
   houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
   c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
@@ -188,16 +189,16 @@ cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
 
 houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
 
-minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+minKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea 
       + bedrooms + bathrooms + age+ pubsewer + septic + nosewer
-      + waterfrontNo + waterfrontYes +newConstructionNo,k=houseMinK, data = .))
+      + waterfrontNo + waterfrontYes +newConstructionNo)^2,k=houseMinK, data = .))
 
 # RMSE
 
 rmse(lm2, saratoga_test)
 rmse(lmLasso, saratoga_test)
 map2_dbl(minKModel, houseKNN$test, modelr::rmse)
-
+mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
 ```
 
 ```{r David, include=FALSE}
@@ -374,16 +375,6 @@ confusedBestChild
 #data
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
-#dev factorizing
-# hotel_dev$meal =  as.factor(hotel_dev$meal)
-# hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
-# hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
-# hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
-# hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
-# hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
-# hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
-# hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
-# hotel_dev$arrival_date =  as.factor(hotel_dev$arrival_date)
 
 #val factorizing
 hotel_val$meal =  as.factor(hotel_val$meal)
