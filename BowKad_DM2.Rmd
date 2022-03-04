@@ -92,6 +92,7 @@ ggplot(capmetro) +
 ```{r #Number 2, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
+
 #data cleaning
 
 saratoga = (SaratogaHouses)
