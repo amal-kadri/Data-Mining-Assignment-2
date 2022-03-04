@@ -116,17 +116,26 @@ f <- as.formula(
         paste(coef_vector, collapse = " + "), 
         sep = " ~ "))
 
+#Optimal Lasso
+
+lmLasso = eval(bquote(lm(.(f), data = saratoga)))
+
 #KNN Split
 
 saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
 
+Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction, data=saratoga_train)
 
+Xtest = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + sewer + waterfront + newConstruction, data=saratoga_test)
+
+ytrain = saratoga_train$price
+ytest = saratoga_test$price
 
 lm2 = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=saratoga_train)
 
-lmLasso = eval(bquote(lm(.(f), data = saratoga)))
+
 
 k_grid = c(2:100)
 K_folds = 5
