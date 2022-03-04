@@ -296,6 +296,8 @@ credit_model = glm(Default ~ duration + amount + installment + age + history
 
 kredit_test = mutate(.data = kredit_test, yhat = predict(credit_model, kredit_test, type='response'))
 
+#model predictions
+
 credPredict = predict(credit_model, data=kredit_test, type="response")
 yhat_test = ifelse(credPredict > 0.5, 1, 0)
 kredit_test =  mutate(.data = kredit_test, yhat_t = ifelse(yhat > 0.5, 1, 0))
@@ -303,6 +305,9 @@ confusion_out_logit = table(y = kredit_test$Default,
                             yhat = kredit_test$yhat_t)
 
 confusion_out_logit
+
+confusion_rate = (confusion_out_logit/sum(confusion_out_logit))
+confusion_rate
 
 #make ROC curve
 
@@ -358,8 +363,6 @@ childCoef = coef(childLasso)
 plot(childLasso)
 childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
                    verb = TRUE,  family = "binomial")
-
-
 
 ```
 #lasso testing
