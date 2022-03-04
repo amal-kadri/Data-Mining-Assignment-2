@@ -54,11 +54,8 @@ capmetro$day_of_week = factor(capmetro$day_of_week, levels = c("Sun", "Mon", "Tu
 
 avg_board = capmetro %>% 
   group_by(hour_of_day, day_of_week, month) %>% 
-  summarize(avg_pass = mean(boarding)) %>% 
+  summarize(avg_pass = mean(boarding), .groups = 'drop') %>% 
   arrange(hour_of_day, day_of_week, month)
-view(capmetro)
-
-avg_board
 
 ggplot(avg_board) +
   geom_line(aes(x = hour_of_day, y = avg_pass, col = month)) + 
@@ -74,7 +71,6 @@ knitr::opts_chunk$set(echo = F)
 temp_board = capmetro %>%
   group_by(hour_of_day) %>%
   summarise(mean = mean(boarding))
-
 
 ggplot(capmetro) +
   geom_point(aes(x=temperature, y = boarding, col = weekend), size = .05) +
@@ -99,7 +95,6 @@ saratoga = saratoga %>%
 saratoga = saratoga %>% 
   mutate(nosewer = ifelse(sewer == "none", 1,0))
 saratoga = subset(saratoga, select = -c(sewer))
-saratoga
 #Lasso Regression
 
 houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction -heating - fuel)^2, data = saratoga)[,-1] 
@@ -117,7 +112,6 @@ coefData = houseCoef %>%
   as.matrix() %>%
   as.data.frame()
 coefData$magnitude = round(abs(coefData$seg100),2)
-coefData
 coefData = coefData %>%
   filter(magnitude > 0)
 coefData = cbind(newColName = rownames(coefData), coefData)
@@ -140,6 +134,8 @@ saratoga_test = testing(saratoga_split)
 #Medium Linear Model
 
 lm2 = lm(price ~ . - pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction, data=saratoga_train)
+
+#KNN Scale
 
 Xtrain = model.matrix(price ~ lotSize + livingArea  + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfront + newConstruction - 1, data=saratoga_train)
 
@@ -259,16 +255,16 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 #Number 3
 ```{r #Number 3, include=TRUE}
 knitr::opts_chunk$set(echo = F)
+
 kredit = read.csv(here("data", "german_credit.csv"))
 kredit$Good = ifelse(kredit$history == "good",1,0)
 kredit$Poor = ifelse(kredit$history == "poor",1,0)
 kredit$Terrible = ifelse(kredit$history == "terrible",1,0)
-#view(kredit)
+
 credHistory = kredit%>%
   group_by(history)%>%
   summarise(numDefault = sum(Default), count = n()) %>%
   mutate(default_liklihood = numDefault/count)
-
 
 ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood))
@@ -281,11 +277,6 @@ credit_model = glm(Default ~ duration + amount + installment + age + history
                    + purpose + foreign, family = "binomial", kredit_train)
 
 kredit_test = mutate(.data = kredit_test, yhat = predict(credit_model, kredit_test, type='response'))
-kredit_test
-# ggplot(kred_test) + 
-#   geom_jitter(aes(x=Default, y=yhat), width=0.1, alpha=0.2) + 
-#   labs(title="Test-set predicted probabilities", y = "P(spam | x)", x="Spam?") + 
-#   stat_summary(aes(x=Default, y=yhat), fun='mean', col='red', size=1)
 
 credPredict = predict(credit_model, data=kredit_test, type="response")
 yhat_test = ifelse(credPredict > 0.5, 1, 0)
@@ -310,14 +301,14 @@ hotel_dev_train = training(hotel_dev_split)
 hotel_dev_test = testing(hotel_dev_split)
 
 #Basic Model
+
 model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, family = "binomial", hotel_dev_train)
+
 hotel_dev_test = mutate(.data = hotel_dev_test, yhat1 = predict(model1, hotel_dev_test, type='response')) %>% 
   mutate(.data = hotel_dev_test, childPred1 =  ifelse(yhat1 > 0.2, 1, 0))
 
 confusedBasicChild = table(y = hotel_dev_test$children , yhat = hotel_dev_test$childPred)
-# kredit_test =  mutate(.data = kredit_test, yhat_t = ifelse(yhat > 0.5, 1, 0))
-# confusion_out_logit = table(y = kredit_test$Default,
-#                             yhat = kredit_test$yhat_t)
+
 confusedBasicChild
 
 #Big Model
@@ -343,15 +334,14 @@ childX = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
 childY = hotel_dev_train$children
 childMatrix= t(model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test))
 childLasso = gamlr(childX,childY, family = "binomial")
-# childPred3 = predict(childLasso, childMatrix, select="min")
+
+
 childCoef = coef(childLasso)
 plot(childLasso)
 childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
                    verb = TRUE,  family = "binomial")
 
 
-#plot(childCV)
-#childCoef
 
 ```
 #lasso testing
