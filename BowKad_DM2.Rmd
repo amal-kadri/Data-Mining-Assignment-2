@@ -173,14 +173,15 @@ folds_test_scale <- Xtest %>%
 
 k_grid = c(2:100)
 K_folds = 5
-houseKNN = crossv_kfold(folds_train_scale, k = K_folds)
-houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age, k= 20,
-                                           data = .))
+# houseKNN = crossv_kfold(folds_train_scale, k = K_folds)
+# houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+#                                            + bedrooms + bathrooms + age, k= 20,
+#                                            data = .))
 
 cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
-  houseKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes + waterfrontNo + newConstructionNo, k=k,
+  houseKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea 
+                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes
+                                           + waterfrontNo + newConstructionNo)^2, k=k,
                                            data = ., use.all = FALSE))
   houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
   c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
@@ -188,16 +189,16 @@ cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
 
 houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
 
-minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+minKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea 
       + bedrooms + bathrooms + age+ pubsewer + septic + nosewer
-      + waterfrontNo + waterfrontYes +newConstructionNo,k=houseMinK, data = .))
+      + waterfrontNo + waterfrontYes +newConstructionNo)^2,k=houseMinK, data = .))
 
 # RMSE
 
 rmse(lm2, saratoga_test)
 rmse(lmLasso, saratoga_test)
 map2_dbl(minKModel, houseKNN$test, modelr::rmse)
-
+mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
 ```
 
 ```{r David, include=FALSE}
@@ -344,7 +345,6 @@ testMatrix = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test)
 hotel_dev_test = mutate(.data = hotel_dev_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
 confusedBestChild = table(y = hotel_dev_test$children, yhat_Lasso = hotel_dev_test$childPred3)
 
-
 #Basic Model
 
 model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, family = "binomial", hotel_dev_train)
@@ -370,21 +370,11 @@ confusedBestChild
 ```
 
 
-
+####Number 4Val
 ```{r}
 #data
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
-#dev factorizing
-# hotel_dev$meal =  as.factor(hotel_dev$meal)
-# hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
-# hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
-# hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
-# hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
-# hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
-# hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
-# hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
-# hotel_dev$arrival_date =  as.factor(hotel_dev$arrival_date)
 
 #val factorizing
 hotel_val$meal =  as.factor(hotel_val$meal)
@@ -401,17 +391,47 @@ hotel_val_split = initial_split(hotel_val, prop = 0.8)
 hotel_val_train = training(hotel_val_split)
 hotel_val_test = testing(hotel_val_split)
 
+
+childY <- hotel_dev_train$children
+childX <- model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
+
+childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
+
 #test matrix
-valTestMatrix = model.matrix(children ~ (.-arrival_date - 1), data = hotel_val_test)
+valTestMatrix = model.matrix(children ~ .-arrival_date - 1, data = hotel_val_test)
 roomL = hotel_val_test %>% select(children,assigned_room_type) %>% 
   mutate(assigned_room_typeL = ifelse(assigned_room_type == "L",1,0))
 roomLMatrix = model_matrix(children ~ assigned_room_typeL - 1, data = roomL)
 valTestMatrix = as.matrix(cbind(valTestMatrix,roomLMatrix))
 hotel_val_test = mutate(.data = hotel_val_test,
                         childPred3 = predict(childLasso, newx=valTestMatrix,
-                                             type = "class", s = 'lambda.1se'))
+                                             type = "response", s = 'lambda.min')) %>% 
+  mutate(.data = hotel_val_test, childPred3 =  ifelse(yhat > 0.5, 1, 0))
 confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
 confusedBestChild
+
+
+K_folds = 20
+Bestchild = crossv_kfold(hotel_val_train, k = K_folds)
+childKModel = map(cv_child$train, ~ childLasso)
+
+cv_child = foreach(k = k_grid, .combine = 'rbind')%do%{
+  childKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes + waterfrontNo + newConstructionNo, k=k,
+                                           data = ., use.all = FALSE))
+  houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
+  c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
+  }
+
+houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
+
+minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
+      + bedrooms + bathrooms + age+ pubsewer + septic + nosewer
+      + waterfrontNo + waterfrontYes +newConstructionNo,k=houseMinK, data = .))
+
+
+
+
 ```
 
 
