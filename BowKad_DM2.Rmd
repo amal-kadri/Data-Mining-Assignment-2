@@ -115,7 +115,7 @@ houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - water
 houseY = saratoga$price
 
 houseLasso = gamlr(houseX, houseY, alpha = 1)
-plot(houseLasso)
+#plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 houseCoef = coef(houseLasso)
 
