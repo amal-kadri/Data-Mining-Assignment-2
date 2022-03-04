@@ -262,11 +262,20 @@ confusedBigChild
 # # fit a single lasso
 # sclasso = gamlr(scx, scy, family="binomial")
 
+
 childX = model.matrix(children ~ .-arrival_date -1, data = hotel_dev_train)
 childY = hotel_dev_train$children
+childMatrix= t(model.matrix(children ~ .-arrival_date -1, data = hotel_dev_test))
 childLasso = gamlr(childX,childY, family = "binomial")
-childPred3 = predict(childLasso, hotel_dev_test, select="min")
+childPred3 = predict(childLasso, childMatrix, select="min")
 childCoef = coef(childLasso)
-childCoef
+plot(childLasso)
+childCV = cv.gamlr(childX,childY, nfold = 10, standardize = FALSE,
+                   verb = TRUE,  family = "binomial")
+
+
+#plot(childCV)
+#childCoef
+
 ```
 
