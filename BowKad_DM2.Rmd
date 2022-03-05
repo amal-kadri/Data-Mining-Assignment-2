@@ -386,18 +386,21 @@ confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_te
 
 confusedBestChild
 
+hotel_val_test
 
 thresh_grid = seq(0.95, 0.05, by=-0.005)
+
 roc_curve_child = foreach(thresh = thresh_grid, .combine='rbind') %do% {
   hotel_test = ifelse(hotel_val_test >= thresh, 1, 0)
-  # FPR, TPR for linear model
   confusion_out_logit = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
   out_logit = data.frame(model = "logit",
-                       TPR = confusion_out_logit[2,2]/sum(spamtest$y==1),
-                       FPR = confusion_out_logit[1,2]/sum(spamtest$y==0))
+                       TPR = confusedBestChild[2,2]/sum(hotel_val_test$children==1),
+                       FPR = confusedBestChild[1,2]/sum(hotel_val_test$children==0))
   
   rbind(out_logit)
 } %>% as.data.frame()
+
+roc_curve_child
 
 ggplot(roc_curve_child) + 
   geom_line(aes(x=FPR, y=TPR)) + 
