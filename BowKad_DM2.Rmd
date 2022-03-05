@@ -108,8 +108,17 @@ saratoga = saratoga %>%
   mutate(nosewer = ifelse(sewer == "none", 1,0))
 saratoga = subset(saratoga, select = -c(sewer))
 
-#lasso regression
+saratoga_split = initial_split(saratoga, prop = 0.8)
+saratoga_train = training(saratoga_split)
+saratoga_test = testing(saratoga_split)
 
+# stepwise selection to pick the best slate of tripple interactions
+# stepwise selection to pick the best slate of tripple interactions
+lmbase = lm(price ~ ., data = saratoga_test)
+lmstep = step(lmbase, scope=~(.)^3)
+
+########################################################################################################################
+#lasso regression
 houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction -heating - fuel)^2, data = saratoga)[,-1] 
 
 houseY = saratoga$price
@@ -136,12 +145,8 @@ f <- as.formula(
 #optimal lasso
 
 lmLasso = eval(bquote(lm(.(f), data = saratoga)))
-
+#######################################################################################################
 #KNN split
-
-saratoga_split = initial_split(saratoga, prop = 0.8)
-saratoga_train = training(saratoga_split)
-saratoga_test = testing(saratoga_split)
 
 #medium linear model
 
@@ -195,7 +200,7 @@ minKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea
 # RMSE
 
 rmse(lm2, saratoga_test)
-rmse(lmLasso, saratoga_test)
+rmse(lmstep, saratoga_test)
 map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
 ```
