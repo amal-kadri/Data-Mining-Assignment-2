@@ -330,7 +330,7 @@ hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 # hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
 # hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
 hotel_dev$arrival_date =  ymd(hotel_dev$arrival_date)
-
+storeDev = hotel_dev
 DumbHotels = dummy_cols(hotel_dev)
 DumbDev = DumbHotels%>%
   mutate(reserved_room_type_I = 0) %>%
@@ -341,7 +341,8 @@ DumbDev = DumbHotels%>%
   mutate(assigned_room_type_L = 0)
 
 DumbDev = DumbDev %>%
-  select(-c(assigned_room_type, reserved_room_type))
+  select(-c(assigned_room_type, reserved_room_type, hotel, meal, market_segment,
+            distribution_channel, deposit_type, customer_type, required_car_parking_spaces))
 
 hotel_dev = DumbDev 
 
@@ -375,6 +376,10 @@ hotel_dev_test = mutate(.data = hotel_dev_test, childPred3 = predict(childLasso,
 confusedBestChild = table(y = hotel_dev_test$children, yhat_Lasso = hotel_dev_test$childPred3)
 
 #Basic Model
+hotel_dev = storeDev
+hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
+hotel_dev_train = training(hotel_dev_split)
+hotel_dev_test = testing(hotel_dev_split)
 
 model1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, family = "binomial", hotel_dev_train)
 
@@ -429,7 +434,8 @@ DumbVal = DumbVal%>%
   mutate(assigned_room_type_L = 0)
 
 DumbVal = DumbVal %>%
-  select(-c(assigned_room_type, reserved_room_type))
+  select(-c(assigned_room_type, reserved_room_type, hotel, meal, market_segment,
+            distribution_channel, deposit_type, customer_type, required_car_parking_spaces))
 hotel_val = DumbVal
 
 hotel_val_split = initial_split(hotel_val, prop = 0.8)
@@ -463,29 +469,44 @@ hotel_val_test = mutate(.data = hotel_val_test,
 hotel_val_test = hotel_val_test %>% mutate(.data = hotel_val_test, childPred3 =  ifelse(childProb3 > 0.5, 1, 0))
 confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
 confusedBestChild
+```
 
-variables = colnames(valTestMatrix)
+4Fold
+```{r}
+hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 
-K_folds = 20
-Bestchild = crossv_kfold(hotel_val_train, k = K_folds)
-childKModel = map(cv_child$train, ~ childLasso)
+hotel_dev$arrival_date =  ymd(hotel_dev$arrival_date)
+storeDev = hotel_dev
+DumbHotels = dummy_cols(hotel_dev)
+DumbDev = DumbHotels%>%
+  mutate(reserved_room_type_I = 0) %>%
+  mutate(reserved_room_type_J = 0) %>%
+  mutate(reserved_room_type_K = 0) %>%
+  mutate(reserved_room_type_L = 0) %>%
+  mutate(assigned_room_type_J = 0) %>%
+  mutate(assigned_room_type_L = 0)
 
-cv_child = foreach(k = k_grid, .combine = 'rbind')%do%{
-  childKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes + waterfrontNo + newConstructionNo, k=k,
-                                           data = ., use.all = FALSE))
-  houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
-  c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
-  }
+DumbDev = DumbDev %>%
+  select(-c(assigned_room_type, reserved_room_type, hotel, meal, market_segment,
+            distribution_channel, deposit_type, customer_type, required_car_parking_spaces))
 
-houseMinK = as.data.frame(cv_House) %>% arrange(err) %>% select(k) %>% head(1) %>% as.numeric()
+hotel_dev = DumbDev 
 
-minKModel = map(houseKNN$train, ~ knnreg(price ~ lotSize + livingArea 
-      + bedrooms + bathrooms + age+ pubsewer + septic + nosewer
-      + waterfrontNo + waterfrontYes +newConstructionNo,k=houseMinK, data = .))
+hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
+hotel_dev_train = training(hotel_dev_split)
+hotel_dev_test = testing(hotel_dev_split)
 
+#Matrices
+childY <- hotel_dev_train$children
+childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev_train)
 
+childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 20, trace.it = 1, standardize = FALSE)
 
+testMatrix = model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev_test)
+
+hotel_dev_test = mutate(.data = hotel_dev_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
+confusedBestChild = table(y = hotel_dev_test$children, yhat_Lasso = hotel_dev_test$childPred3)
+confusedBestChild
 #childLasso[["glmnet.fit"]][["beta"]]@Dimnames[[1]]
 ```
 
