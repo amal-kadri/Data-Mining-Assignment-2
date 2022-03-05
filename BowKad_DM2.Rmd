@@ -344,8 +344,9 @@ knitr::opts_chunk$set(echo = F)
 #clean data
 
 hotel_val = read.csv(here("data", "hotels_val.csv"))
+hotel_val$arrival_date = ymd(hotel_val$arrival_date)
 
-otherVariables = colnames(model_matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val))
+#otherVariables = colnames(model_matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val))
 
 DumbVal = dummy_cols(hotel_val)
 DumbVal = DumbVal%>%
@@ -383,7 +384,7 @@ confusedBestChild
 
 thresh_grid = seq(0.95, 0.05, by=-0.005)
 roc_curve_child = foreach(thresh = thresh_grid, .combine='rbind') %do% {
-  hotel_val_test = ifelse(phat_test_lm_spam >= thresh, 1, 0)
+  hotel_test = ifelse(hotel_val_test >= thresh, 1, 0)
   # FPR, TPR for linear model
   confusion_out_logit = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
   out_logit = data.frame(model = "logit",
