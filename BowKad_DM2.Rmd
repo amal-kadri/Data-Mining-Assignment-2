@@ -94,7 +94,6 @@ ggplot(capmetro) +
 ```{r #Number 2, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
-
 #data cleaning
 
 saratoga = (SaratogaHouses)
@@ -125,7 +124,6 @@ houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - water
 houseY = saratoga$price
 
 houseLasso = gamlr(houseX, houseY, alpha = 1)
-#plot(houseLasso)
 lambdamin = which.min(AICc(houseLasso))
 houseCoef = coef(houseLasso)
 
@@ -386,6 +384,27 @@ hotel_val_test = hotel_val_test %>% mutate(.data = hotel_val_test, childPred3 = 
 confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
 
 confusedBestChild
+
+
+thresh_grid = seq(0.95, 0.05, by=-0.005)
+roc_curve_child = foreach(thresh = thresh_grid, .combine='rbind') %do% {
+  hotel_val_test = ifelse(phat_test_lm_spam >= thresh, 1, 0)
+  # FPR, TPR for linear model
+  confusion_out_logit = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
+  out_logit = data.frame(model = "logit",
+                       TPR = confusion_out_logit[2,2]/sum(spamtest$y==1),
+                       FPR = confusion_out_logit[1,2]/sum(spamtest$y==0))
+  
+  rbind(out_logit)
+} %>% as.data.frame()
+
+ggplot(roc_curve_child) + 
+  geom_line(aes(x=FPR, y=TPR)) + 
+  labs(title="ROC curve logit models") +
+  theme_bw(base_size = 10)
+
+
+
 ```
 
 4Fold
