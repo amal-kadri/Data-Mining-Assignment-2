@@ -169,10 +169,34 @@ minKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea
       + waterfrontNo + waterfrontYes +newConstructionNo)^2,k=houseMinK, data = .))
 
 # RMSE
+#CV Medium
+nFolds = 5
+rmseLm2 = foreach(1:nFolds, .combine = 'rbind')%do%{
+  saratoga_split = initial_split(saratoga, prop = 0.8)
+  saratoga_test = testing(saratoga_split)
+  lmErr = rmse(lm2, saratoga_test)
+}
+#CV Step
+LmStep = lm(price ~ age + landValue + livingArea + bedrooms + 
+    fireplaces + bathrooms + rooms + heating + waterfront + newConstruction + 
+    centralAir + pubsewer + septic + landValue:centralAir + landValue:fireplaces + 
+    bathrooms:heating + rooms:pubsewer + rooms:septic + fireplaces:bathrooms + 
+    bedrooms:pubsewer + fireplaces:rooms, data = saratoga_test)
 
-rmse(lm2, saratoga_test)
-rmse(lmstep, saratoga_test)
-map2_dbl(minKModel, houseKNN$test, modelr::rmse)
+rmseLmStep = foreach(1:nFolds, .combine = 'rbind')%do%{
+  saratoga_split = initial_split(saratoga, prop = 0.8)
+  saratoga_test = testing(saratoga_split)
+  lmErr = rmse(LmStep, saratoga_test)
+}
+
+#Cross-validated lm2 RMSE
+mean(rmseLm2)
+
+#Cross-validated lmstep RMSE
+mean(rmseLmStep)
+
+#Cross-validated KNN RMSE
+#map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
 ```
 
