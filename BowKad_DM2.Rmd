@@ -341,10 +341,10 @@ confusedBestChild
 
 ####Number 4Val
 ```{r}
-#data
-#hotel_dev = read.csv(here("data", "hotels_dev.csv"))
-hotel_val = read.csv(here("data", "hotels_val.csv"))
 
+#clean data
+
+hotel_val = read.csv(here("data", "hotels_val.csv"))
 
 otherVariables = colnames(model_matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val))
 
@@ -362,37 +362,31 @@ DumbVal = DumbVal %>%
             distribution_channel, deposit_type, customer_type, required_car_parking_spaces))
 hotel_val = DumbVal
 
+#train-test splits
+
 hotel_val_split = initial_split(hotel_val, prop = 0.8)
 hotel_val_train = training(hotel_val_split)
 hotel_val_test = testing(hotel_val_split)
 
-# 
-# childY <- hotel_dev_train$children
-# childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev_train)
-# 
-# childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 5, trace.it = 1, standardize = FALSE)
 
 #test matrix
+
 valTestMatrix = model.matrix(children ~ (.-arrival_date)^2 - 1, data = hotel_val_test)
-# roomL = hotel_val_test %>% select(children,assigned_room_type) %>% 
-#   mutate(assigned_room_typeL = ifelse(assigned_room_type == "L",1,0))
-# roomLMatrix = model_matrix(children ~ assigned_room_typeL - 1, data = roomL)
-# valTestMatrix = as.matrix(cbind(valTestMatrix,roomLMatrix))
-
-
-
-#f_include(otherVariables, colnames(valTestMatrix), valTestMatrix)
 
 hotel_val_test = mutate(.data = hotel_val_test,
                         childProb3 = predict(childLasso, newx=valTestMatrix,
                                              type = "response", s = 'lambda.min'))
 hotel_val_test = hotel_val_test %>% mutate(.data = hotel_val_test, childPred3 =  ifelse(childProb3 > 0.5, 1, 0))
 confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
+
 confusedBestChild
 ```
 
 4Fold
 ```{r}
+
+#clean data
+
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 
 hotel_dev$arrival_date =  ymd(hotel_dev$arrival_date)
@@ -412,11 +406,14 @@ DumbDev = DumbDev %>%
 
 hotel_dev = DumbDev 
 
+#train-test splits
+
 hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
 hotel_dev_train = training(hotel_dev_split)
 hotel_dev_test = testing(hotel_dev_split)
 
-#Matrices
+#matrices
+
 childY <- hotel_dev_train$children
 childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev_train)
 
@@ -425,8 +422,10 @@ childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", n
 testMatrix = model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev_test)
 
 hotel_dev_test = mutate(.data = hotel_dev_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
+
 confusedBestChild = table(y = hotel_dev_test$children, yhat_Lasso = hotel_dev_test$childPred3)
+
 confusedBestChild
-#childLasso[["glmnet.fit"]][["beta"]]@Dimnames[[1]]
+
 ```
 
