@@ -352,7 +352,9 @@ valTestMatrix = model.matrix(children ~ (.-arrival_date)^2 - 1, data = hotel_val
 hotel_val_test = mutate(.data = hotel_val_test,
                         childProb3 = predict(childLasso, newx=valTestMatrix,
                                              type = "response", s = 'lambda.min'))
+
 hotel_val_test = hotel_val_test %>% mutate(.data = hotel_val_test, childPred3 =  ifelse(childProb3 > 0.5, 1, 0))
+
 confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
 
 confusedBestChild
@@ -362,11 +364,11 @@ hotel_val_test
 thresh_grid = seq(0.95, 0.05, by=-0.005)
 
 roc_curve_child = foreach(thresh = thresh_grid, .combine='rbind') %do% {
-  hotel_test = ifelse(hotel_val_test >= thresh, 1, 0)
-  confusion_out_logit = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
+  child_test = ifelse(hotel_val_test$childProb3 >= thresh, 1, 0)
+  confusion_out_logit = table(y = hotel_val_test$children, yhat = child_test)
   out_logit = data.frame(model = "logit",
-                       TPR = confusedBestChild[2,2]/sum(hotel_val_test$children==1),
-                       FPR = confusedBestChild[1,2]/sum(hotel_val_test$children==0))
+                       TPR = confusion_out_logit[2,2]/sum(hotel_val_test$children==1),
+                       FPR = confusion_out_logit[1,2]/sum(hotel_val_test$children==0))
   
   rbind(out_logit)
 } %>% as.data.frame()
@@ -377,7 +379,6 @@ ggplot(roc_curve_child) +
   geom_line(aes(x=FPR, y=TPR)) + 
   labs(title="ROC curve logit models") +
   theme_bw(base_size = 10)
-
 
 
 ```
