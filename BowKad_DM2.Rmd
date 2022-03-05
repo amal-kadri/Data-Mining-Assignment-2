@@ -313,6 +313,14 @@ confusion_out_logit
 confusion_rate = (confusion_out_logit/sum(confusion_out_logit))
 confusion_rate
 
+confusiontable <- as.data.frame(confusion_rate)
+
+newcol <- c('True Negative', 'False Negative', 'False Positive', 'True Positive')
+
+nct <- cbind(confusiontable, newcol)
+nct %>%
+  rename(Frequency = Freq, Result = newcol)
+
 ```
 ####Number 4dev
 ```{r #Number 4, include=TRUE}
