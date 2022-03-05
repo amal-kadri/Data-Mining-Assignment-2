@@ -317,30 +317,46 @@ confusion_rate
 ####Number 4dev
 ```{r #Number 4, include=TRUE}
 knitr::opts_chunk$set(echo = F)
-library(fastDummies)
 
+library(fastDummies)
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
-hotel_val = read.csv(here("data", "hotels_val.csv"))
-hotel_dev$meal =  as.factor(hotel_dev$meal)
-hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
-hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
-hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
-hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
-hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
-hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
-hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
+# hotel_val = read.csv(here("data", "hotels_val.csv"))
+# hotel_dev$meal =  as.factor(hotel_dev$meal)
+# hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
+# hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
+# hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
+# hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
+# hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
+# hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
+# hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
 hotel_dev$arrival_date =  ymd(hotel_dev$arrival_date)
 
-Dumb_Hotel = dummy_cols(.data = hotel_dev)
+DumbHotels = dummy_cols(hotel_dev)
+DumbDev = DumbHotels%>%
+  mutate(reserved_room_type_I = 0) %>%
+  mutate(reserved_room_type_J = 0) %>%
+  mutate(reserved_room_type_K = 0) %>%
+  mutate(reserved_room_type_L = 0) %>%
+  mutate(assigned_room_type_J = 0) %>%
+  mutate(assigned_room_type_L = 0)
+
+DumbDev = DumbDev %>%
+  select(-c(assigned_room_type, reserved_room_type))
+
+hotel_dev = DumbDev 
+
 mainVariables = colnames(model_matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev))
 
 
 #for all variables in mainVariables, if mainVariables[variable] not in colnames(MATRIX), add column of 0s for that variable name
+ 
+`%notin%` <- Negate(`%in%`)
 
-f_include = function(mainVariables, text_matrix) 
-  for i in mainVariables {
-  if mainVariables in text_matrix
-}
+f_include = function(mainVariables, variable_list, varaible_matrix) 
+  for (i in mainVariables) {
+    if (mainVariables[i] %notin% variable_list) {
+      mutate(data = variable_matrix, mainVariables[i] <- 0)}
+    }
 
 #train-test splits
 hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
@@ -389,17 +405,32 @@ confusedBestChild
 #hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 
+
+otherVariables = colnames(model_matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val))
+
 #val factorizing
-hotel_val$meal =  as.factor(hotel_val$meal)
-hotel_val$market_segment =  as.factor(hotel_val$market_segment)
-hotel_val$distribution_channel =  as.factor(hotel_val$distribution_channel)
-hotel_val$reserved_room_type =  as.factor(hotel_val$reserved_room_type)
-hotel_val$assigned_room_type =  as.factor(hotel_val$assigned_room_type)
-hotel_val$deposit_type =  as.factor(hotel_val$deposit_type)
-hotel_val$customer_type =  as.factor(hotel_val$customer_type)
-hotel_val$required_car_parking_spaces =  as.factor(hotel_val$required_car_parking_spaces)
-hotel_val$arrival_date =  as.factor(hotel_val$arrival_date)
-hotel_val$assigned_room_typeL = 0
+# hotel_val$meal =  as.factor(hotel_val$meal)
+# hotel_val$market_segment =  as.factor(hotel_val$market_segment)
+# hotel_val$distribution_channel =  as.factor(hotel_val$distribution_channel)
+# hotel_val$reserved_room_type =  as.factor(hotel_val$reserved_room_type)
+# hotel_val$assigned_room_type =  as.factor(hotel_val$assigned_room_type)
+# hotel_val$deposit_type =  as.factor(hotel_val$deposit_type)
+# hotel_val$customer_type =  as.factor(hotel_val$customer_type)
+# hotel_val$required_car_parking_spaces =  as.factor(hotel_val$required_car_parking_spaces)
+hotel_val$arrival_date =  ymd(hotel_val$arrival_date)
+
+DumbVal = dummy_cols(hotel_val)
+DumbVal = DumbVal%>%
+  mutate(reserved_room_type_I = 0) %>%
+  mutate(reserved_room_type_J = 0) %>%
+  mutate(reserved_room_type_K = 0) %>%
+  mutate(reserved_room_type_L = 0) %>%
+  mutate(assigned_room_type_J = 0) %>%
+  mutate(assigned_room_type_L = 0)
+
+DumbVal = DumbVal %>%
+  select(-c(assigned_room_type, reserved_room_type))
+hotel_val = DumbVal
 
 hotel_val_split = initial_split(hotel_val, prop = 0.8)
 hotel_val_train = training(hotel_val_split)
@@ -417,6 +448,15 @@ valTestMatrix = model.matrix(children ~ (.-arrival_date)^2 - 1, data = hotel_val
 #   mutate(assigned_room_typeL = ifelse(assigned_room_type == "L",1,0))
 # roomLMatrix = model_matrix(children ~ assigned_room_typeL - 1, data = roomL)
 # valTestMatrix = as.matrix(cbind(valTestMatrix,roomLMatrix))
+
+f_include = function(mainVariables, variable_list, varaible_matrix) 
+  for (i in mainVariables) {
+    if (mainVariables[i] %notin% variable_list) {
+      mutate(variable_matrix$mainVariables[i] <- 0)}
+    }
+
+#f_include(otherVariables, colnames(valTestMatrix), valTestMatrix)
+
 hotel_val_test = mutate(.data = hotel_val_test,
                         childProb3 = predict(childLasso, newx=valTestMatrix,
                                              type = "response", s = 'lambda.min'))
