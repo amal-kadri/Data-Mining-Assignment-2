@@ -192,6 +192,7 @@ mean(rmseLmStep)
 #Cross-validated KNN RMSE
 #map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
+# Bespoke Code by John Scott Bowman
 ```
 
 #Number 3
