@@ -117,35 +117,6 @@ saratoga_test = testing(saratoga_split)
 lmbase = lm(price ~ ., data = saratoga_test)
 lmstep = step(lmbase, scope=~(.)^3)
 
-########################################################################################################################
-#lasso regression
-houseX = model.matrix(price~(.- pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction -heating - fuel)^2, data = saratoga)[,-1] 
-
-houseY = saratoga$price
-
-houseLasso = gamlr(houseX, houseY, alpha = 1)
-lambdamin = which.min(AICc(houseLasso))
-houseCoef = coef(houseLasso)
-
-#soft code beta values
-
-coefData = houseCoef %>% 
-  as.matrix() %>%
-  as.data.frame()
-coefData$magnitude = round(abs(coefData$seg100),2)
-coefData = coefData %>%
-  filter(magnitude > 0)
-coefData = cbind(newColName = rownames(coefData), coefData)
-coef_vector = as.vector(coefData[2:nrow(coefData),1])
-f <- as.formula(
-  paste("price", 
-        paste(coef_vector, collapse = "+"), 
-        sep = " ~ "))
-
-#optimal lasso
-
-lmLasso = eval(bquote(lm(.(f), data = saratoga)))
-#######################################################################################################
 #KNN split
 
 #medium linear model
