@@ -633,3 +633,23 @@ confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_te
 confusedBestChild
 ```
 
+
+```{r}
+hotel_dev = read.csv(here("data", "hotels_dev.csv"))
+hotel_val = read.csv(here("data", "hotels_val.csv"))
+hotel_dev$meal =  as.factor(hotel_dev$meal)
+hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
+hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
+hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
+hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
+hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
+hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
+hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
+hotel_dev$arrival_date =  ymd(hotel_dev$arrival_date)
+
+Dumb_Hotel = dummy_cols(.data = hotel_dev)
+mainVariables = colnames(model_matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev))
+
+
+```
+
