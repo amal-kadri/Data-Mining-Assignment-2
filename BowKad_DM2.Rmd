@@ -254,7 +254,7 @@ nct %>%
 
 ```
 ####Number 4dev
-```{r #Number 4, include=TRUE}
+```{r #Number 4dev, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
 #clean data
@@ -340,7 +340,8 @@ confusedBestChild
 
 
 ####Number 4Val
-```{r}
+```{r #Number 4val, include=TRUE}
+knitr::opts_chunk$set(echo = F)
 
 #clean data
 
@@ -383,7 +384,8 @@ confusedBestChild
 ```
 
 4Fold
-```{r}
+```{r #Number 4fold, include=TRUE}
+knitr::opts_chunk$set(echo = F)
 
 #clean data
 
