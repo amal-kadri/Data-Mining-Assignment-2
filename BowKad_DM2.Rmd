@@ -76,12 +76,6 @@ ggplot(avg_board) +
 ```{r #1b, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
-#group data
-
-temp_board = capmetro %>%
-  group_by(hour_of_day) %>%
-  summarise(mean = mean(boarding))
-
 #plot data
 
 ggplot(capmetro) +
@@ -113,7 +107,7 @@ saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
 
 # stepwise selection to pick the best slate of tripple interactions
-# stepwise selection to pick the best slate of tripple interactions
+
 lmbase = lm(price ~ ., data = saratoga_test)
 lmstep = step(lmbase, scope=~(.)^3)
 
@@ -198,11 +192,14 @@ ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood)) + ggtitle("Default Likelihood by Credit History") +
   xlab("Credit History") + ylab("Default Likelihood")
 
-#glm
+#train test split
 
 kredit_split = initial_split(kredit, prop = 0.8)
 kredit_train = training(kredit_split)
 kredit_test = testing(kredit_split)
+
+#glm
+
 credit_model = glm(Default ~ duration + amount + installment + age + history 
                    + purpose + foreign, family = "binomial", kredit_train)
 
@@ -361,7 +358,9 @@ confusedBestChild
 
 hotel_val_test
 
-thresh_grid = seq(0.95, 0.05, by=-0.005)
+# roc curve
+
+thresh_grid = seq(0.99, 0.01, by=-0.005)
 
 roc_curve_child = foreach(thresh = thresh_grid, .combine='rbind') %do% {
   child_test = ifelse(hotel_val_test$childProb3 >= thresh, 1, 0)
@@ -377,7 +376,7 @@ roc_curve_child
 
 ggplot(roc_curve_child) + 
   geom_line(aes(x=FPR, y=TPR)) + 
-  labs(title="ROC curve logit models") +
+  labs(title="ROC Legit Lasso") +
   theme_bw(base_size = 10)
 
 
