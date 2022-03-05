@@ -201,73 +201,6 @@ map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
 ```
 
-```{r David, include=FALSE}
-# knitr::opts_chunk$set(echo = F)
-# # KNN MODELS
-# nfold = 5
-# 
-# saratoga_folds <- SaratogaHouses %>%
-#   mutate(fold_id = rep(1:nfold, length=nrow(SaratogaHouses)) %>% sample)
-# 
-# rmse_cv <- foreach(fold = 1:nfold, .combine='c') %do% {
-#   # looping over fold_id
-#   folds_train <- saratoga_folds %>% 
-#     filter(fold_id != fold)
-#   folds_test <- saratoga_folds %>% 
-#     filter(fold_id == fold)
-#   
-#   # separate out response
-#   ytrain = folds_train$price
-#   ytest = folds_test$price
-#   
-#   # separate out features for scaling by sd of TRAIN set
-#   xtrain = model.matrix(~ . - 1 - price, data=folds_train)
-#   xtest = model.matrix(~ . - 1 - price, data=folds_test)
-#   
-#   scale_train = apply(xtrain, 2, sd)
-#   
-#   # TRAIN
-#   # a pipe that:
-#   #   scales TRAINING features by TRAINING sds
-#   #   recombines scaled features with un-scaled TRAIN y response 
-#   folds_train_scale <- xtrain %>% 
-#     scale(scale = scale_train) %>% 
-#     bind_cols(price = ytrain) %>% 
-#     as.data.frame(select(price, everything()))
-#   
-#   # TEST
-#   # a pipe that:
-#   #   scales TESTING features by TRAINING sds
-#   #   recombines scaled features with un-scaled TEST y response
-#   folds_test_scale <- xtest %>% 
-#     scale(scale = scale_train) %>%
-#     bind_cols(price = ytest) %>% 
-#     as.data.frame(select(price, everything()))
-#   
-#   klist <- foreach(K = 2:100, .combine = 'c') %do%{
-#   knnreg(price ~ lotSize + age + landValue + livingArea + bedrooms + newConstructionNo, data=folds_train_scale, k=K) %>% 
-#     modelr::rmse(data = folds_test_scale)
-#   }
-# }
-# 
-# rmse_matrix <- as.data.frame(rmse_cv) %>% 
-#   mutate(fold = case_when(row_number() < 100 ~ 1, 
-#                           row_number() >= 100 & row_number() < 200 ~ 2, 
-#                           row_number() >= 200 & row_number() < 300 ~ 3, 
-#                           row_number() >= 300 & row_number() < 400 ~ 4, 
-#                           row_number() >= 400 & row_number() < 500 ~ 5), 
-#          k = case_when(row_number() < 100 ~ row_number() + 1, 
-#                       row_number() >= 100 & row_number() < 200 ~ row_number() - 99, 
-#                       row_number() >= 200 & row_number() < 300 ~ row_number() - 199, 
-#                       row_number() >= 300 & row_number() < 400 ~ row_number() - 299, 
-#                       row_number() >= 400 & row_number() < 500 ~ row_number() - 399)) %>% 
-#   group_by(k) %>% 
-#   summarise(mean_rmse = mean(rmse_cv)) %>% 
-#   arrange(mean_rmse)
-# 
-# k_optimal <- rmse_matrix$k[1]
-```
-
 #Number 3
 ```{r #Number 3, include=TRUE}
 knitr::opts_chunk$set(echo = F)
@@ -307,11 +240,8 @@ yhat_test = ifelse(credPredict > 0.5, 1, 0)
 kredit_test =  mutate(.data = kredit_test, yhat_t = ifelse(yhat > 0.5, 1, 0))
 confusion_out_logit = table(y = kredit_test$Default,
                             yhat = kredit_test$yhat_t)
-kredit_test
-confusion_out_logit
 
 confusion_rate = (confusion_out_logit/sum(confusion_out_logit))
-confusion_rate
 
 confusiontable <- as.data.frame(confusion_rate)
 
@@ -328,15 +258,7 @@ knitr::opts_chunk$set(echo = F)
 
 library(fastDummies)
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
-# hotel_val = read.csv(here("data", "hotels_val.csv"))
-# hotel_dev$meal =  as.factor(hotel_dev$meal)
-# hotel_dev$market_segment =  as.factor(hotel_dev$market_segment)
-# hotel_dev$distribution_channel =  as.factor(hotel_dev$distribution_channel)
-# hotel_dev$reserved_room_type =  as.factor(hotel_dev$reserved_room_type)
-# hotel_dev$assigned_room_type =  as.factor(hotel_dev$assigned_room_type)
-# hotel_dev$deposit_type =  as.factor(hotel_dev$deposit_type)
-# hotel_dev$customer_type =  as.factor(hotel_dev$customer_type)
-# hotel_dev$required_car_parking_spaces =  as.factor(hotel_dev$required_car_parking_spaces)
+
 hotel_dev$arrival_date =  ymd(hotel_dev$arrival_date)
 storeDev = hotel_dev
 DumbHotels = dummy_cols(hotel_dev)
