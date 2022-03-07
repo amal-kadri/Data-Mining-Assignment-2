@@ -187,7 +187,9 @@ minKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea
 nFolds = 5
 rmseLm2 = foreach(1:nFolds, .combine = 'rbind')%do%{
   saratoga_split = initial_split(saratoga, prop = 0.8)
+  saratoga_train =  training(saratoga_split)
   saratoga_test = testing(saratoga_split)
+  lm2 = lm(price ~ . - pctCollege - pubsewer - septic - nosewer - waterfront - landValue - newConstruction, data=saratoga_train)
   lmErr = rmse(lm2, saratoga_test)
 }
 #CV Step
@@ -199,7 +201,13 @@ LmStep = lm(price ~ age + landValue + livingArea + bedrooms +
 
 rmseLmStep = foreach(1:nFolds, .combine = 'rbind')%do%{
   saratoga_split = initial_split(saratoga, prop = 0.8)
+  saratoga_train = training(saratoga_split)
   saratoga_test = testing(saratoga_split)
+  LmStep = lm(price ~ age + landValue + livingArea + bedrooms + 
+    fireplaces + bathrooms + rooms + heating + waterfront + newConstruction + 
+    centralAir + pubsewer + septic + landValue:centralAir + landValue:fireplaces + 
+    bathrooms:heating + rooms:pubsewer + rooms:septic + fireplaces:bathrooms + 
+    bedrooms:pubsewer + fireplaces:rooms, data = saratoga_train)
   lmErr = rmse(LmStep, saratoga_test)
 }
 ```
