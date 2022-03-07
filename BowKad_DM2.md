@@ -1,7 +1,9 @@
 Note that the `echo = FALSE` parameter was added to the code chunk to
 prevent printing of the R code that generated the plot.
 
-\#1-a ![](BowKad_DM2_files/figure-markdown_strict/#1-a-1.png) Caption:
+\#1-a
+
+![](BowKad_DM2_files/figure-markdown_strict/#1-a-output-1.png) Caption:
 The plot above displays average boardings of Capital Metro buses on the
 UT campus, averaged by hour of day, broken down by month (September,
 October, November) and finally faceted by day of the week, and finally
@@ -28,8 +30,8 @@ majority of class assignments are likely due towards the end of the
 week. This greater workload may compel some students to stay on campus
 and study late into the night, causing them to miss the last bus and
 return home using other means. \#1-b
-![](BowKad_DM2_files/figure-markdown_strict/#1-b-1.png) Caption: The
-plot above shows boardings of Capital Metro buses in each 15-mimnute
+![](BowKad_DM2_files/figure-markdown_strict/#1-b-output-1.png) Caption:
+The plot above shows boardings of Capital Metro buses in each 15-mimnute
 window, by temperature, faceted by hour of day. Red and cyan points
 correspond to data from weekdays and weekends, respectively.
 
@@ -43,11 +45,11 @@ temperature.
 
 \#2
 
-    ## [1] 63351.27
+    ## [1] 69325.62
 
-    ## [1] 60804.38
+    ## [1] 56914.36
 
-    ## [1] 65002.46
+    ## [1] 67164.41
 
 The highest performing model is the step-wise selected linear model.
 This is likely due to KNNs inability to handle many independent
@@ -64,7 +66,9 @@ features are much more significant than other pairs, so choosing a
 method of modeling that can remove these non significant pairs (or
 interactions) is crucial.
 
-\#3 ![](BowKad_DM2_files/figure-markdown_strict/#3-1.png) The bar plot
+\#3
+
+![](BowKad_DM2_files/figure-markdown_strict/#3-ratio-1.png) The bar plot
 above displays the proportion of total of defaults for three credit
 history classes, “good”, “poor”, and “terrible”. Intuitively, we would
 expect that a worse credit history corresponds to a higher default rate.
@@ -78,16 +82,16 @@ loans that had defaulted, and attempted to match this set with similar
 loans that had not defaulted.
 
     ##   y yhat Frequency         Result
-    ## 1 0    0     0.675  True Negative
-    ## 2 1    0     0.180 False Negative
-    ## 3 0    1     0.045 False Positive
-    ## 4 1    1     0.100  True Positive
+    ## 1 0    0     0.655  True Negative
+    ## 2 1    0     0.215 False Negative
+    ## 3 0    1     0.060 False Positive
+    ## 4 1    1     0.070  True Positive
 
     ##   y yhat  Freq         newcol
-    ## 1 0    0 0.675  True Negative
-    ## 2 1    0 0.180 False Negative
-    ## 3 0    1 0.045 False Positive
-    ## 4 1    1 0.100  True Positive
+    ## 1 0    0 0.655  True Negative
+    ## 2 1    0 0.215 False Negative
+    ## 3 0    1 0.060 False Positive
+    ## 4 1    1 0.070  True Positive
 
 The set of loans that defaulted probably had a higher-than-average
 proportion of loans with terrible credit history. Because this sample
@@ -106,18 +110,18 @@ it would be a more accurate representation of the overall portfolio.
 
     ##    yhat
     ## y      0    1
-    ##   0 8275    1
-    ##   1  724    0
+    ##   0 8268    2
+    ##   1  729    1
 
     ##    yhat_Logit
     ## y      0    1
-    ##   0 8172  104
-    ##   1  465  259
+    ##   0 8160  110
+    ##   1  460  270
 
     ##    yhat_Lasso
     ## y      0    1
-    ##   0 8195   68
-    ##   1  507  230
+    ##   0 8227   65
+    ##   1  497  211
 
 \#Problem 4 Overview \#\# 4-a Rather than basic OLS, we used a Logit
 regression for our baseline, as the probability bounding done by
@@ -138,20 +142,20 @@ the Logit).
 
     ##    yhat_Lasso
     ## y     0   1
-    ##   0 909   7
-    ##   1  68  16
+    ##   0 914   5
+    ##   1  60  21
 
-![](BowKad_DM2_files/figure-markdown_strict/#4-b-results-1.png) \#\# 4-b
-We then tested our Lasso linear model on the hotel\_val data set, and
-found very similar error and confusion matrix to our hotel\_dev results.
-The above ROC curve charts our True and False Positive Rates as we very
-the classification threshold.
+![](BowKad_DM2_files/figure-markdown_strict/#4-b-results-output-1.png)
+\#\# 4-b We then tested our Lasso linear model on the hotel\_val data
+set, and found very similar error and confusion matrix to our hotel\_dev
+results. The above ROC curve charts our True and False Positive Rates as
+we very the classification threshold.
 
 \#4-c
 
-    ## [1] 0.3146572
+    ## [1] 0.3117685
 
-![](BowKad_DM2_files/figure-markdown_strict/#Number%204foldfinal-1.png)
+![](BowKad_DM2_files/figure-markdown_strict/#4foldfinal-output-1.png)
 
 Above is the mean True Positive Rate generated across all 20 folds of
 our data, and a histogram of the TPRs across folds. Our results seem
