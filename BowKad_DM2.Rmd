@@ -323,13 +323,6 @@ hotel_dev = DumbDev
 
 mainVariables = colnames(model_matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev))
  
-# `%notin%` <- Negate(`%in%`)
-
-# f_include = function(mainVariables, variable_list, varaible_matrix) 
-#   for (i in mainVariables) {
-#     if (mainVariables[i] %notin% variable_list) {
-#       mutate(variable_matrix$mainVariables[i] <- 0)}
-#     }
 
 #train-test splits
 hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
@@ -499,5 +492,16 @@ confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_te
 
 confusedBestChild
 
+```
+
+```{r #Number defunct code, include=TRUE}
+knitr::opts_chunk$set(echo = F)
+# `%notin%` <- Negate(`%in%`)
+
+# f_include = function(mainVariables, variable_list, varaible_matrix) 
+#   for (i in mainVariables) {
+#     if (mainVariables[i] %notin% variable_list) {
+#       mutate(variable_matrix$mainVariables[i] <- 0)}
+#     }
 ```
 
