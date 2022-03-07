@@ -40,7 +40,7 @@ kredit = read.csv(here("data", "german_credit.csv"))
 hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```
-#1a
+#1-a
 ```{r #1a, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
@@ -71,8 +71,25 @@ ggplot(avg_board) +
   xlab("Average Passengers") + ylab("Hour of Day")
   
 ```
+Caption: The plot above displays average boardings of Capital Metro buses on the UT campus, averaged
+by hour of day, broken down by month (September, October, November) and finally faceted by day of
+the week, and finally by month (September, October, November). In general, the hour of peak boardings
+fluctuates between 3PM and 5:30PM across weekdays.
 
-#1b
+This pattern is most likely the result of the majority of UT classes ending in the afternoon between these
+hours. We note that on weekends, there is no readily discernible peak boarding hour, since no classes
+are held on weekends and there will be much fewer students on campus. Average boardings on
+Mondays in September appear to be lower than in other days and months. A possible reason for this is
+twofold. First, given that the semester starts in late August and begins with syllabus week, many
+students may choose to not go to campus an attend classes as academic pressure is still low at this stage
+of the term. Second, having just arrived at school, many students may be excited to see their peers and
+spend their weekends partying (intensely) which may lower enthusiasm for Monday classes.
+Similarly, we observe that average boardings on Wednesday, Thursday, and Friday appear lower in
+November. This is potentially caused by the fact that in November most courses hold their midterms.
+Furthermore, the majority of class assignments are likely due towards the end of the week. This greater
+workload may compel some students to stay on campus and study late into the night, causing them to
+miss the last bus and return home using other means.
+#1-b
 ```{r #1b, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
@@ -83,8 +100,17 @@ ggplot(capmetro) +
   facet_wrap(~hour_of_day) + ggtitle("Average Boardings by Temperature") +
   xlab("Temperature") + ylab("Boardings")
 ```
+Caption: The plot above shows boardings of Capital Metro buses in each 15-mimnute window, by
+temperature, faceted by hour of day. Red and cyan points correspond to data from weekdays and
+weekends, respectively.
+Suppose we hold weekend status and the hour of the day constant and examine all the data points for
+any one hour of the day. In this case, temperature does not seem to have much of an effect on the
+number of students riding the bus. While the number of boardings changes considerably during the day,
 
-#Number 2
+in any one-hour block, the cluster of data points does not seem to exhibit any apparent trend with
+respect to temperature.
+
+#2
 ```{r #Number 2, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
@@ -102,6 +128,8 @@ saratoga = saratoga %>%
   mutate(nosewer = ifelse(sewer == "none", 1,0))
 saratoga = subset(saratoga, select = -c(sewer))
 
+#KNN split
+
 saratoga_split = initial_split(saratoga, prop = 0.8)
 saratoga_train = training(saratoga_split)
 saratoga_test = testing(saratoga_split)
@@ -110,8 +138,6 @@ saratoga_test = testing(saratoga_split)
 
 lmbase = lm(price ~ ., data = saratoga_test)
 lmstep = step(lmbase, scope=~(.)^3)
-
-#KNN split
 
 #medium linear model
 
@@ -192,7 +218,7 @@ mean(rmseLmStep)
 #Cross-validated KNN RMSE
 #map2_dbl(minKModel, houseKNN$test, modelr::rmse)
 mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
-# Bespoke Code by John Scott Bowman
+
 ```
 
 #Number 3
@@ -216,7 +242,16 @@ credHistory = kredit%>%
 ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood)) + ggtitle("Default Likelihood by Credit History") +
   xlab("Credit History") + ylab("Default Likelihood")
+```
+The bar plot above displays the proportion of total of defaults for three credit history classes, “good”, “poor”, and
+“terrible”. Intuitively, we would expect that a worse credit history corresponds to a higher default rate.
+Surprisingly, we observe the exact opposite of this relationship. Borrowers with good credit history
+exhibit the highest default rate, whereas those with terrible credit history exhibit the lowest default rate
+of the three categories. This counterintuitive result likely stems from how to dataset was constructed.
+As defaults are overall rather rare, the German bank whose data we analyzed decided to sampled a set
+of loans that had defaulted, and attempted to match this set with similar loans that had not defaulted.
 
+```{r #Number 3, include=TRUE}
 #train test split
 
 kredit_split = initial_split(kredit, prop = 0.8)
@@ -249,6 +284,16 @@ nct %>%
   rename(Frequency = Freq, Result = newcol)
 
 ```
+The set of loans that defaulted probably had a higher-than-average proportion of loans with terrible
+credit history. Because this sample had many more loans, it likely also had a broader set of
+characteristics allowing matching with sample loans that did not default. The list of loans with good
+credit history that defaulted, was much smaller, (as individuals with good credit history do not often
+default on their loans) and thus did was less likely to match with loans that did not default. Hence by
+matching loans in such a way, the bank unintentionally generated an inverse relationship between credit
+history and default likelihood.
+The bank should thus change its sampling scheme. For example, random sampling of loans would
+provide a better set of data, as it would be a more accurate representation of the overall portfolio.
+
 ####Number 4dev
 ```{r #Number 4dev, include=TRUE}
 knitr::opts_chunk$set(echo = F)
@@ -413,12 +458,12 @@ knitr::opts_chunk$set(echo = F)
 
 #clean data
 
-hotel_dev = read.csv(here("data", "hotels_dev.csv"))
+hotel_val = read.csv(here("data", "hotels_dev.csv"))
 
-hotel_dev$arrival_date =  ymd(hotel_dev$arrival_date)
-storeDev = hotel_dev
-DumbHotels = dummy_cols(hotel_dev)
-DumbDev = DumbHotels%>%
+hotel_val$arrival_date =  ymd(hotel_val$arrival_date)
+storeVal = hotel_val
+DumbHotels = dummy_cols(hotel_val)
+DumbVal = DumbHotels%>%
   mutate(reserved_room_type_I = 0) %>%
   mutate(reserved_room_type_J = 0) %>%
   mutate(reserved_room_type_K = 0) %>%
@@ -426,30 +471,30 @@ DumbDev = DumbHotels%>%
   mutate(assigned_room_type_J = 0) %>%
   mutate(assigned_room_type_L = 0)
 
-DumbDev = DumbDev %>%
+DumbVal = DumbVal %>%
   select(-c(assigned_room_type, reserved_room_type, hotel, meal, market_segment,
             distribution_channel, deposit_type, customer_type, required_car_parking_spaces))
 
-hotel_dev = DumbDev 
+hotel_val = DumbVal
 
 #train-test splits
 
-hotel_dev_split = initial_split(hotel_dev, prop = 0.8)
-hotel_dev_train = training(hotel_dev_split)
-hotel_dev_test = testing(hotel_dev_split)
+hotel_val_split = initial_split(hotel_val, prop = 0.8)
+hotel_val_train = training(hotel_val_split)
+hotel_val_test = testing(hotel_val_split)
 
 #matrices
 
-childY <- hotel_dev_train$children
-childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev_train)
+childY <- hotel_val_train$children
+childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_train)
 
 childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 20, trace.it = 1, standardize = FALSE)
 
-testMatrix = model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_dev_test)
+testMatrix = model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_test)
 
-hotel_dev_test = mutate(.data = hotel_dev_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
+hotel_val_test = mutate(.data = hotel_val_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
 
-confusedBestChild = table(y = hotel_dev_test$children, yhat_Lasso = hotel_dev_test$childPred3)
+confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_test$childPred3)
 
 confusedBestChild
 
