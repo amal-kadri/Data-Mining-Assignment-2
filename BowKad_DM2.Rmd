@@ -202,15 +202,15 @@ rmseLmStep = foreach(1:nFolds, .combine = 'rbind')%do%{
 ```{r #Number 2 Result, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 #Cross-validated lm2 RMSE
-mean(rmseLm2)
-
+medium_model = mean(rmseLm2)
+medium_model
 #Cross-validated lmstep RMSE
-mean(rmseLmStep)
-
+step_model = mean(rmseLmStep)
+step_model
 #Cross-validated KNN RMSE
 #map2_dbl(minKModel, houseKNN$test, modelr::rmse)
-mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
-
+KNN_model = mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
+KNN_model
 ```
 The highest performing model is the step-wise selected linear model. This is likely due to KNNs inability to handle many independent variables, where the step wise function is able to systematically remove low performing variables and keep high performing variables. Some interactions might be adding variance without better explaining the data, while others increase the models explanatory power. The KNN model can't get rid of the noise created by all the interactions while the step-wise gradually eliminates variables till the model yielding the lowest RMSE is produced. Having multiple favorable features in a property like waterfront access and proximity to schools can increase the value of a property exponentially, but the presence of some pairs of features are much more significant than other pairs, so choosing a method of modeling that can remove these non significant pairs (or interactions) is crucial.
 
@@ -273,7 +273,7 @@ nct %>%
 The set of loans that defaulted probably had a higher-than-average proportion of loans with terrible credit history. Because this sample had many more loans, it likely also had a broader set of characteristics allowing matching with sample loans that did not default. The list of loans with good credit history that defaulted, was much smaller, (as individuals with good credit history do not often default on their loans) and thus did was less likely to match with loans that did not default. Hence by matching loans in such a way, the bank unintentionally generated an inverse relationship between credit history and default likelihood. The bank should thus change its sampling scheme. For example, random sampling of loans would provide a better set of data, as it would be a more accurate representation of the overall portfolio.
 
 #4-a
-```{r #4-a, include=TRUE}
+```{r #4-a, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 
 #clean data
@@ -332,7 +332,6 @@ hotel_dev_test = mutate(.data = hotel_dev_test, yhat1 = predict(model1, hotel_de
 
 confusedBasicChild = table(y = hotel_dev_test$children , yhat = hotel_dev_test$childPred1)
 
-
 #Big Model
 
 model2 = glm(children ~. - arrival_date, family = "binomial", hotel_dev_train)
@@ -341,6 +340,11 @@ hotel_dev_test = mutate(.data = hotel_dev_test, yhat2 = predict(model2, hotel_de
   mutate(.data = hotel_dev_test, childPred2 =  ifelse(yhat2 > 0.5, 1, 0))
 
 confusedBigChild = table(y = hotel_dev_test$children, yhat_Logit = hotel_dev_test$childPred2)
+```
+
+
+```{r #4-a-results, include=TRUE}
+knitr::opts_chunk$set(echo = F)
 
 confusedBasicChild
 
@@ -349,7 +353,9 @@ confusedBigChild
 confusedBestChild
 
 ```
-
+#Problem 4 Overview
+## 4-a
+Rather than basic OLS, we used a Logit regression for our baseline, as the probability bounding done by Logistic Regression might offer better predictors of a binary likelihood than OLS. However, the 1st linear model (children ~ market_segment + adults + customer_type + is_repeated_guest) was so inaccurate we had to lower our characterization threshold significantly in order to get it to predict any nonzero number of children. The Big model performed significantly better, and was a good baseline for our next steps. We then performed a Lasso on all coefficients and interactions (after transforming all categorical variables into 0/1 indicators for their respective categories). The Lasso performed about as well as the Big Model (which we attribute to the difference in distribution of predictions between the LM produced by the Lasso and the one produced by the Logit). 
 
 #4-b
 ```{r #4-b, include=FALSE}
@@ -401,8 +407,11 @@ hotel_val_test
 ```
 
 
-```{r #4-b-output, include=TRUE}
+```{r #4-b-results, include=TRUE}
 knitr::opts_chunk$set(echo = F)
+
+confusedBestChild
+
 # roc curve
 
 thresh_grid = seq(0.90, 0.05, by=-0.005)
@@ -423,9 +432,11 @@ ggplot(roc_curve_child) +
 
 
 ```
+## 4-b
+We then tested our Lasso linear model on the hotel_val data set, and found very similar error and confusion matrix to our hotel_dev results. The above ROC curve charts our True and False Positive Rates as we very the classification threshold.
 
 #4-c
-```{r #4-c, include=TRUE}
+```{r #4-c, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 
 #clean data
@@ -491,7 +502,7 @@ confusedBestChild
 
 ```
 
-```{r #4-c-1, include=TRUE}
+```{r #4-c-1, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 #clean data
 
@@ -543,7 +554,7 @@ colnames(folds_lasso)=c("TPR")
 folds_lasso$folds = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
 folds_lasso
 meanTPR = mean(folds_lasso$TPR)
-####################################################################
+
 ```
 
 
@@ -557,6 +568,8 @@ TPR_fold_comparison = ggplot(folds_lasso)+
     title = "TPR by Fold")
 TPR_fold_comparison
 ```
+
+Above is the mean True Positive Rate generated across all 20 folds of our data, and a histogram of the TPRs across folds. Our results seem relatively stable across folds. The mean RMSE is slightly higher than our in-sample estimates, but that is to be expected with a validation set.
 
 ```{r #Number defunct code, include=TRUE}
 #defunct code ##########################
