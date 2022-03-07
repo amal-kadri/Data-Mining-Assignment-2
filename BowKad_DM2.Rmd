@@ -464,7 +464,24 @@ childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_train)
 
 childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 20, trace.it = 1, standardize = FALSE)
 
-childLasso
+child_coef = coef(childLasso) %>% 
+  as.matrix() %>% 
+  as.data.frame()
+
+child_coef = child_coef %>% 
+  mutate(mag = abs(s1)) %>% 
+  filter(mag > 0)
+
+child_coef <- tibble::rownames_to_column(child_coef, "VALUE")
+
+child_coef = child_coef[2:nrow(child_coef),1]
+child_coef
+
+f <- as.formula(
+  paste("children", 
+        paste(child_coef, collapse = " + "), 
+        sep = " ~ "))
+
 
 testMatrix = model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_test)
 
@@ -504,21 +521,19 @@ hotel_val_split = initial_split(hotel_val, prop = 0.8)
 hotel_val_train = training(hotel_val_split)
 hotel_val_test = testing(hotel_val_split)
 
-#matrices
-
-k_grid = c(1:20)
-
-childY <- hotel_val_train$children
-childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_train)
-
-cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
-  houseKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea 
-                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes
-                                           + waterfrontNo + newConstructionNo)^2, k=k,
-                                           data = ., use.all = FALSE))
-  houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
-  c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
-  }
+# k_grid = c(1:20)
+# 
+# childY <- hotel_val_train$children
+# childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_train)
+# 
+# cross_child = crossv_kfold(folds_train_scale, k = k_grid)
+# 
+# cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
+#   houseKModel = map(hotel_val_train, ~ eval(bquote(glm(.(f), k=k,
+#                                            data = .,family = "binomial", use.all = FALSE))
+#   houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
+#   c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
+#   }
 ```
 
 ```{r #Number defunct code, include=TRUE}
@@ -530,5 +545,23 @@ knitr::opts_chunk$set(echo = F)
 #     if (mainVariables[i] %notin% variable_list) {
 #       mutate(variable_matrix$mainVariables[i] <- 0)}
 #     }
+
+# child_coef = coef(childLasso) %>% 
+#   as.matrix() %>% 
+#   as.data.frame()
+# 
+# child_coef = child_coef %>% 
+#   mutate(mag = abs(s1)) %>% 
+#   filter(mag > 0)
+# 
+# child_coef <- tibble::rownames_to_column(child_coef, "VALUE")
+# 
+# child_coef = child_coef[2:nrow(child_coef),1]
+# child_coef
+
+# f <- as.formula(
+#   paste("children", 
+#         paste(child_coef, collapse = " + "), 
+#         sep = " ~ "))
 ```
 
