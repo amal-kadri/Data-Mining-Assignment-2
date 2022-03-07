@@ -100,15 +100,9 @@ ggplot(capmetro) +
   facet_wrap(~hour_of_day) + ggtitle("Average Boardings by Temperature") +
   xlab("Temperature") + ylab("Boardings")
 ```
-Caption: The plot above shows boardings of Capital Metro buses in each 15-mimnute window, by
-temperature, faceted by hour of day. Red and cyan points correspond to data from weekdays and
-weekends, respectively.
-Suppose we hold weekend status and the hour of the day constant and examine all the data points for
-any one hour of the day. In this case, temperature does not seem to have much of an effect on the
-number of students riding the bus. While the number of boardings changes considerably during the day,
+Caption: The plot above shows boardings of Capital Metro buses in each 15-mimnute window, by temperature, faceted by hour of day. Red and cyan points correspond to data from weekdays and weekends, respectively.
 
-in any one-hour block, the cluster of data points does not seem to exhibit any apparent trend with
-respect to temperature.
+Suppose we hold weekend status and the hour of the day constant and examine all the data points for any one hour of the day. In this case, temperature does not seem to have much of an effect on the number of students riding the bus. While the number of boardings changes considerably during the day, in any one-hour block, the cluster of data points does not seem to exhibit any apparent trend with respect to temperature.
 
 #2
 ```{r #Number 2, include=TRUE}
@@ -222,7 +216,7 @@ mean(map2_dbl(minKModel, houseKNN$test, modelr::rmse))
 ```
 The highest performing model is the step-wise selected linear model. This is likely due to KNNs inability to handle many independent variables, where the step wise function is able to systematically remove low performing variables and keep high performing variables. Some interactions might be adding variance without better explaining the data, while others increase the models explanatory power. The KNN model can't get rid of the noise created by all the interactions while the step-wise gradually eliminates variables till the model yielding the lowest RMSE is produced. Having multiple favorable features in a property like waterfront access and proximity to schools can increase the value of a property exponentially, but the presence of some pairs of features are much more significant than other pairs, so choosing a method of modeling that can remove these non significant pairs (or interactions) is crucial.
 
-#Number 3
+#3
 ```{r #Number 3, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
@@ -244,14 +238,7 @@ ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood)) + ggtitle("Default Likelihood by Credit History") +
   xlab("Credit History") + ylab("Default Likelihood")
 ```
-The bar plot above displays the proportion of total of defaults for three credit history classes, “good”, “poor”, and
-“terrible”. Intuitively, we would expect that a worse credit history corresponds to a higher default rate.
-Surprisingly, we observe the exact opposite of this relationship. Borrowers with good credit history
-exhibit the highest default rate, whereas those with terrible credit history exhibit the lowest default rate
-of the three categories. This counterintuitive result likely stems from how to dataset was constructed.
-As defaults are overall rather rare, the German bank whose data we analyzed decided to sampled a set
-of loans that had defaulted, and attempted to match this set with similar loans that had not defaulted.
-
+The bar plot above displays the proportion of total of defaults for three credit history classes, “good”, “poor”, and “terrible”. Intuitively, we would expect that a worse credit history corresponds to a higher default rate. Surprisingly, we observe the exact opposite of this relationship. Borrowers with good credit history exhibit the highest default rate, whereas those with terrible credit history exhibit the lowest default rate of the three categories. This counterintuitive result likely stems from how to dataset was constructed. As defaults are overall rather rare, the German bank whose data we analyzed decided to sampled a set of loans that had defaulted, and attempted to match this set with similar loans that had not defaulted.
 ```{r #Number 3, include=TRUE}
 #train test split
 
@@ -285,17 +272,9 @@ nct %>%
   rename(Frequency = Freq, Result = newcol)
 
 ```
-The set of loans that defaulted probably had a higher-than-average proportion of loans with terrible
-credit history. Because this sample had many more loans, it likely also had a broader set of
-characteristics allowing matching with sample loans that did not default. The list of loans with good
-credit history that defaulted, was much smaller, (as individuals with good credit history do not often
-default on their loans) and thus did was less likely to match with loans that did not default. Hence by
-matching loans in such a way, the bank unintentionally generated an inverse relationship between credit
-history and default likelihood.
-The bank should thus change its sampling scheme. For example, random sampling of loans would
-provide a better set of data, as it would be a more accurate representation of the overall portfolio.
+The set of loans that defaulted probably had a higher-than-average proportion of loans with terrible credit history. Because this sample had many more loans, it likely also had a broader set of characteristics allowing matching with sample loans that did not default. The list of loans with good credit history that defaulted, was much smaller, (as individuals with good credit history do not often default on their loans) and thus did was less likely to match with loans that did not default. Hence by matching loans in such a way, the bank unintentionally generated an inverse relationship between credit history and default likelihood. The bank should thus change its sampling scheme. For example, random sampling of loans would provide a better set of data, as it would be a more accurate representation of the overall portfolio.
 
-####Number 4dev
+#4-a
 ```{r #Number 4dev, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
@@ -374,7 +353,7 @@ confusedBestChild
 ```
 
 
-####Number 4Val
+#4-b
 ```{r #Number 4val, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
@@ -446,7 +425,7 @@ ggplot(roc_curve_child) +
 
 ```
 
-4Fold
+#4-c
 ```{r #Number 4fold, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
