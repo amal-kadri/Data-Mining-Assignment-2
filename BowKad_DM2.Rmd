@@ -505,7 +505,7 @@ knitr::opts_chunk$set(echo = F)
 #clean data
 
 hotel_val = read.csv(here("data", "hotels_dev.csv"))
-view(hotel_val)
+#view(hotel_val)
 hotel_val$arrival_date =  ymd(hotel_val$arrival_date)
 storeVal = hotel_val
 DumbHotels = dummy_cols(hotel_val)
@@ -529,22 +529,45 @@ hotel_val_split = initial_split(hotel_val, prop = 0.8)
 hotel_val_train = training(hotel_val_split)
 hotel_val_test = testing(hotel_val_split)
 
-# k_grid = c(1:20)
-# 
-# childY <- hotel_val_train$children
-# childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_train)
-# 
-# cross_child = crossv_kfold(folds_train_scale, k = k_grid)
-# 
-# cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
-#   houseKModel = map(hotel_val_train, ~ eval(bquote(glm(.(f), k=k,
-#                                            data = .,family = "binomial", use.all = FALSE))
-#   houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
-#   c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
-#   }
+K_folds = 20
+hotel_val = hotel_val%>%
+  mutate(fold_id = rep(1:K_folds, length=nrow(hotel_val)) %>% sample)
+
+folds_lasso = foreach(fold = 1:K_folds, .combine='c') %do% {
+  in_fold_data = filter(hotel_val, fold_id == fold)
+  out_fold_data = filter(hotel_val, fold_id != fold)
+  x=model.matrix(children ~ (. -arrival_date - 1 ), data=out_fold_data)
+  y=out_fold_data$children
+  lasso = cv.gamlr(x, y,nfold=5, family="binomial")
+  xval=model.matrix(children ~ (. -arrival_date - 1), data=in_fold_data)
+  pred = predict(lasso, xval, type= "response")
+  yhat_val = ifelse(pred >= 0.5, 1, 0)
+  table = table(y=in_fold_data$children, yhat=yhat_val)
+  TPR = table[2,2] / (table[2,1] + table[2,2]) #TPR
+}
+
+
+folds_lasso = data.frame(folds_lasso)
+colnames(folds_lasso)=c("TPR")
+folds_lasso$folds = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
+folds_lasso
+meanTPR = mean(folds_lasso$TPR)
+####################################################################
+```
+
+
+```{r #Number 4foldfinal, include=TRUE}
+meanTPR
+TPR_fold_comparison = ggplot(folds_lasso)+
+  geom_col(aes(x=folds, y=TPR))+labs(
+    x="Fold",
+    y="TPR",
+    title = "TPR by Fold")
+TPR_fold_comparison
 ```
 
 ```{r #Number defunct code, include=TRUE}
+#defunct code ##########################
 knitr::opts_chunk$set(echo = F)
 # `%notin%` <- Negate(`%in%`)
 
