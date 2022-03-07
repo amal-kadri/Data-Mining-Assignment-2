@@ -65,7 +65,10 @@ avg_board = capmetro %>%
   arrange(hour_of_day, day_of_week, month)
 
 #plot data
+```
 
+
+```{r #1-a-output, include=TRUE}
 avgBoardings = ggplot(avg_board) +
   geom_line(aes(x = hour_of_day, y = avg_pass, col = month)) + 
   facet_wrap(~day_of_week) + ggtitle("Average Boardings") +
@@ -79,8 +82,8 @@ This pattern is most likely the result of the majority of UT classes ending in t
 
 Similarly, we observe that average boardings on Wednesday, Thursday, and Friday appear lower in November. This is potentially caused by the fact that in November most courses hold their midterms. Furthermore, the majority of class assignments are likely due towards the end of the week. This greater workload may compel some students to stay on campus and study late into the night, causing them to miss the last bus and return home using other means.
 #1-b
-```{r #1-b, include=TRUE}
-knitr::opts_chunk$set(echo = F)
+```{r #1-b-output, include=TRUE}
+knitr::opts_chunk$set(echo = T)
 
 #plot data
 
@@ -201,7 +204,7 @@ rmseLmStep = foreach(1:nFolds, .combine = 'rbind')%do%{
   lmErr = rmse(LmStep, saratoga_test)
 }
 ```
-```{r #Number 2 Result, include=TRUE}
+```{r #2-Result, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 #Cross-validated lm2 RMSE
 medium_model = mean(rmseLm2)
@@ -233,14 +236,18 @@ credHistory = kredit%>%
   group_by(history)%>%
   summarise(numDefault = sum(Default), count = n()) %>%
   mutate(default_liklihood = numDefault/count)
+```
 
+
+```{r #3-ratio, include=TRUE}
 credit_ratio = ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood)) + ggtitle("Default Likelihood by Credit History") +
   xlab("Credit History") + ylab("Default Likelihood")
 credit_ratio
 ```
 The bar plot above displays the proportion of total of defaults for three credit history classes, “good”, “poor”, and “terrible”. Intuitively, we would expect that a worse credit history corresponds to a higher default rate. Surprisingly, we observe the exact opposite of this relationship. Borrowers with good credit history exhibit the highest default rate, whereas those with terrible credit history exhibit the lowest default rate of the three categories. This counterintuitive result likely stems from how to dataset was constructed. As defaults are overall rather rare, the German bank whose data we analyzed decided to sampled a set of loans that had defaulted, and attempted to match this set with similar loans that had not defaulted.
-```{r #3-a, include=TRUE}
+```{r #3-split, include=TRUE}
+knitr::opts_chunk$set(echo = F)
 #train test split
 
 kredit_split = initial_split(kredit, prop = 0.8)
@@ -271,6 +278,10 @@ newcol <- c('True Negative', 'False Negative', 'False Positive', 'True Positive'
 nct <- cbind(confusiontable, newcol)
 nct %>%
   rename(Frequency = Freq, Result = newcol)
+```
+
+
+```{r #3-ntc, include=TRUE}
 nct
 ```
 The set of loans that defaulted probably had a higher-than-average proportion of loans with terrible credit history. Because this sample had many more loans, it likely also had a broader set of characteristics allowing matching with sample loans that did not default. The list of loans with good credit history that defaulted, was much smaller, (as individuals with good credit history do not often default on their loans) and thus did was less likely to match with loans that did not default. Hence by matching loans in such a way, the bank unintentionally generated an inverse relationship between credit history and default likelihood. The bank should thus change its sampling scheme. For example, random sampling of loans would provide a better set of data, as it would be a more accurate representation of the overall portfolio.
@@ -347,7 +358,7 @@ confusedBigChild = table(y = hotel_dev_test$children, yhat_Logit = hotel_dev_tes
 
 
 ```{r #4-a-results, include=TRUE}
-knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(echo = T)
 
 confusedBasicChild
 
@@ -427,7 +438,10 @@ roc_curve_child = foreach(thresh = thresh_grid, .combine='rbind') %do% {
                          FPR = confusion_out_logit[1,2]/sum(hotel_val_test$children==0))
   rbind(out_logit)
 } %>% as.data.frame()
+```
 
+
+```{r #4-b-results-output, include=TRUE}
 roc = ggplot(roc_curve_child) + 
   geom_line(aes(x=FPR, y=TPR)) + 
   labs(title="ROC Legit Lasso") +
@@ -561,8 +575,8 @@ meanTPR = mean(folds_lasso$TPR)
 ```
 
 
-```{r #Number 4foldfinal, include=TRUE}
-knitr::opts_chunk$set(echo = F)
+```{r #4foldfinal-output, include=TRUE}
+knitr::opts_chunk$set(echo = T)
 meanTPR
 TPR_fold_comparison = ggplot(folds_lasso)+
   geom_col(aes(x=folds, y=TPR))+labs(
@@ -574,7 +588,7 @@ TPR_fold_comparison
 
 Above is the mean True Positive Rate generated across all 20 folds of our data, and a histogram of the TPRs across folds. Our results seem relatively stable across folds. The mean RMSE is slightly higher than our in-sample estimates, but that is to be expected with a validation set.
 
-```{r #Number defunct code, include=TRUE}
+```{r #Number defunct code, include=FALSE}
 #defunct code ##########################
 knitr::opts_chunk$set(echo = F)
 # `%notin%` <- Negate(`%in%`)
