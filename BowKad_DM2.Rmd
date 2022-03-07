@@ -105,7 +105,7 @@ Caption: The plot above shows boardings of Capital Metro buses in each 15-mimnut
 Suppose we hold weekend status and the hour of the day constant and examine all the data points for any one hour of the day. In this case, temperature does not seem to have much of an effect on the number of students riding the bus. While the number of boardings changes considerably during the day, in any one-hour block, the cluster of data points does not seem to exhibit any apparent trend with respect to temperature.
 
 #2
-```{r #Number 2, include=TRUE}
+```{r #Number 2, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 
 #data cleaning
@@ -202,7 +202,8 @@ rmseLmStep = foreach(1:nFolds, .combine = 'rbind')%do%{
   saratoga_test = testing(saratoga_split)
   lmErr = rmse(LmStep, saratoga_test)
 }
-
+```
+```{r #Number 2 Result, include=TRUE}
 #Cross-validated lm2 RMSE
 mean(rmseLm2)
 
@@ -463,6 +464,8 @@ childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_train)
 
 childLasso <- cv.glmnet(x = childX,y = childY ,alpha = 1, family = "binomial", nfold = 20, trace.it = 1, standardize = FALSE)
 
+childLasso
+
 testMatrix = model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_test)
 
 hotel_val_test = mutate(.data = hotel_val_test, childPred3 = predict(childLasso, newx = testMatrix, type = "class", s = 'lambda.min'))
@@ -471,6 +474,51 @@ confusedBestChild = table(y = hotel_val_test$children, yhat_Lasso = hotel_val_te
 
 confusedBestChild
 
+```
+```{r #Number 4foldfinal, include=TRUE}
+knitr::opts_chunk$set(echo = F)
+#clean data
+
+hotel_val = read.csv(here("data", "hotels_dev.csv"))
+view(hotel_val)
+hotel_val$arrival_date =  ymd(hotel_val$arrival_date)
+storeVal = hotel_val
+DumbHotels = dummy_cols(hotel_val)
+DumbVal = DumbHotels%>%
+  mutate(reserved_room_type_I = 0) %>%
+  mutate(reserved_room_type_J = 0) %>%
+  mutate(reserved_room_type_K = 0) %>%
+  mutate(reserved_room_type_L = 0) %>%
+  mutate(assigned_room_type_J = 0) %>%
+  mutate(assigned_room_type_L = 0)
+
+DumbVal = DumbVal %>%
+  select(-c(assigned_room_type, reserved_room_type, hotel, meal, market_segment,
+            distribution_channel, deposit_type, customer_type, required_car_parking_spaces))
+
+hotel_val = DumbVal
+
+#train-test splits
+
+hotel_val_split = initial_split(hotel_val, prop = 0.8)
+hotel_val_train = training(hotel_val_split)
+hotel_val_test = testing(hotel_val_split)
+
+#matrices
+
+k_grid = c(1:20)
+
+childY <- hotel_val_train$children
+childX <- model.matrix(children ~ (.-arrival_date)^2 -1, data = hotel_val_train)
+
+cv_House = foreach(k = k_grid, .combine = 'rbind')%do%{
+  houseKModel = map(houseKNN$train, ~ knnreg(price ~ (lotSize + livingArea 
+                                           + bedrooms + bathrooms + age + pubsewer + septic + nosewer + waterfrontYes
+                                           + waterfrontNo + newConstructionNo)^2, k=k,
+                                           data = ., use.all = FALSE))
+  houseErr = map2_dbl(houseKModel, houseKNN$test, modelr::rmse)
+  c(k=k, err = mean(houseErr), std_err = sd(houseErr)/sqrt(K_folds))
+  }
 ```
 
 ```{r #Number defunct code, include=TRUE}
