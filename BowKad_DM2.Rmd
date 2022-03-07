@@ -42,7 +42,7 @@ hotel_dev = read.csv(here("data", "hotels_dev.csv"))
 hotel_val = read.csv(here("data", "hotels_val.csv"))
 ```
 #1-a
-```{r #1-a, include=TRUE}
+```{r 1-a, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
 #clean data
@@ -68,7 +68,7 @@ avg_board = capmetro %>%
 ```
 
 
-```{r #1-a-output, include=TRUE}
+```{r 1-a-output, include=TRUE}
 avgBoardings = ggplot(avg_board) +
   geom_line(aes(x = hour_of_day, y = avg_pass, col = month)) + 
   facet_wrap(~day_of_week) + ggtitle("Average Boardings") +
@@ -82,7 +82,7 @@ This pattern is most likely the result of the majority of UT classes ending in t
 
 Similarly, we observe that average boardings on Wednesday, Thursday, and Friday appear lower in November. This is potentially caused by the fact that in November most courses hold their midterms. Furthermore, the majority of class assignments are likely due towards the end of the week. This greater workload may compel some students to stay on campus and study late into the night, causing them to miss the last bus and return home using other means.
 #1-b
-```{r #1-b-output, include=TRUE}
+```{r 1-b-output, include=TRUE}
 knitr::opts_chunk$set(echo = T)
 
 #plot data
@@ -98,7 +98,7 @@ Caption: The plot above shows boardings of Capital Metro buses in each 15-mimnut
 Suppose we hold weekend status and the hour of the day constant and examine all the data points for any one hour of the day. In this case, temperature does not seem to have much of an effect on the number of students riding the bus. While the number of boardings changes considerably during the day, in any one-hour block, the cluster of data points does not seem to exhibit any apparent trend with respect to temperature.
 
 #2
-```{r #2, include=FALSE}
+```{r 2, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 
 #data cleaning
@@ -220,7 +220,7 @@ KNN_model
 The highest performing model is the step-wise selected linear model. This is likely due to KNNs inability to handle many independent variables, where the step wise function is able to systematically remove low performing variables and keep high performing variables. Some interactions might be adding variance without better explaining the data, while others increase the models explanatory power. The KNN model can't get rid of the noise created by all the interactions while the step-wise gradually eliminates variables till the model yielding the lowest RMSE is produced. Having multiple favorable features in a property like waterfront access and proximity to schools can increase the value of a property exponentially, but the presence of some pairs of features are much more significant than other pairs, so choosing a method of modeling that can remove these non significant pairs (or interactions) is crucial.
 
 #3
-```{r #3, include=TRUE}
+```{r 3, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
 #clean data
@@ -239,14 +239,14 @@ credHistory = kredit%>%
 ```
 
 
-```{r #3-ratio, include=TRUE}
+```{r 3-ratio, include=TRUE}
 credit_ratio = ggplot(credHistory)+
   geom_col(aes(x = history, y = default_liklihood)) + ggtitle("Default Likelihood by Credit History") +
   xlab("Credit History") + ylab("Default Likelihood")
 credit_ratio
 ```
 The bar plot above displays the proportion of total of defaults for three credit history classes, “good”, “poor”, and “terrible”. Intuitively, we would expect that a worse credit history corresponds to a higher default rate. Surprisingly, we observe the exact opposite of this relationship. Borrowers with good credit history exhibit the highest default rate, whereas those with terrible credit history exhibit the lowest default rate of the three categories. This counterintuitive result likely stems from how to dataset was constructed. As defaults are overall rather rare, the German bank whose data we analyzed decided to sampled a set of loans that had defaulted, and attempted to match this set with similar loans that had not defaulted.
-```{r #3-split, include=TRUE}
+```{r 3-split, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 #train test split
 
@@ -281,13 +281,13 @@ nct %>%
 ```
 
 
-```{r #3-ntc, include=TRUE}
+```{r 3-ntc, include=TRUE}
 nct
 ```
 The set of loans that defaulted probably had a higher-than-average proportion of loans with terrible credit history. Because this sample had many more loans, it likely also had a broader set of characteristics allowing matching with sample loans that did not default. The list of loans with good credit history that defaulted, was much smaller, (as individuals with good credit history do not often default on their loans) and thus did was less likely to match with loans that did not default. Hence by matching loans in such a way, the bank unintentionally generated an inverse relationship between credit history and default likelihood. The bank should thus change its sampling scheme. For example, random sampling of loans would provide a better set of data, as it would be a more accurate representation of the overall portfolio.
 
 #4-a
-```{r #4-a, include=FALSE}
+```{r 4-a, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 
 #clean data
@@ -357,7 +357,7 @@ confusedBigChild = table(y = hotel_dev_test$children, yhat_Logit = hotel_dev_tes
 ```
 
 
-```{r #4-a-results, include=TRUE}
+```{r 4-a-results, include=TRUE}
 knitr::opts_chunk$set(echo = T)
 
 confusedBasicChild
@@ -372,7 +372,7 @@ confusedBestChild
 Rather than basic OLS, we used a Logit regression for our baseline, as the probability bounding done by Logistic Regression might offer better predictors of a binary likelihood than OLS. However, the 1st linear model (children ~ market_segment + adults + customer_type + is_repeated_guest) was so inaccurate we had to lower our characterization threshold significantly in order to get it to predict any nonzero number of children. The Big model performed significantly better, and was a good baseline for our next steps. We then performed a Lasso on all coefficients and interactions (after transforming all categorical variables into 0/1 indicators for their respective categories). The Lasso performed about as well as the Big Model (which we attribute to the difference in distribution of predictions between the LM produced by the Lasso and the one produced by the Logit). 
 
 #4-b
-```{r #4-b, include=FALSE}
+```{r 4-b, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 
 #clean data
@@ -421,7 +421,7 @@ hotel_val_test
 ```
 
 
-```{r #4-b-results, include=TRUE}
+```{r 4-b-results, include=TRUE}
 knitr::opts_chunk$set(echo = F)
 
 confusedBestChild
@@ -441,7 +441,7 @@ roc_curve_child = foreach(thresh = thresh_grid, .combine='rbind') %do% {
 ```
 
 
-```{r #4-b-results-output, include=TRUE}
+```{r 4-b-results-output, include=TRUE}
 roc = ggplot(roc_curve_child) + 
   geom_line(aes(x=FPR, y=TPR)) + 
   labs(title="ROC Legit Lasso") +
@@ -453,7 +453,7 @@ roc
 We then tested our Lasso linear model on the hotel_val data set, and found very similar error and confusion matrix to our hotel_dev results. The above ROC curve charts our True and False Positive Rates as we very the classification threshold.
 
 #4-c
-```{r #4-c, include=FALSE}
+```{r 4-c, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 
 #clean data
@@ -519,7 +519,7 @@ confusedBestChild
 
 ```
 
-```{r #4-c-1, include=FALSE}
+```{r 4-c-1, include=FALSE}
 knitr::opts_chunk$set(echo = F)
 #clean data
 
@@ -575,7 +575,7 @@ meanTPR = mean(folds_lasso$TPR)
 ```
 
 
-```{r #4foldfinal-output, include=TRUE}
+```{r 4foldfinal-output, include=TRUE}
 knitr::opts_chunk$set(echo = T)
 meanTPR
 TPR_fold_comparison = ggplot(folds_lasso)+
@@ -588,7 +588,7 @@ TPR_fold_comparison
 
 Above is the mean True Positive Rate generated across all 20 folds of our data, and a histogram of the TPRs across folds. Our results seem relatively stable across folds. The mean RMSE is slightly higher than our in-sample estimates, but that is to be expected with a validation set.
 
-```{r #Number defunct code, include=FALSE}
+```{r Number defunct code, include=FALSE}
 #defunct code ##########################
 knitr::opts_chunk$set(echo = F)
 # `%notin%` <- Negate(`%in%`)
