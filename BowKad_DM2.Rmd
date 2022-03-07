@@ -199,6 +199,7 @@ rmseLmStep = foreach(1:nFolds, .combine = 'rbind')%do%{
 }
 ```
 ```{r #Number 2 Result, include=TRUE}
+knitr::opts_chunk$set(echo = F)
 #Cross-validated lm2 RMSE
 mean(rmseLm2)
 
