@@ -43,11 +43,11 @@ temperature.
 
 \#2
 
-    ## [1] 67639
+    ## [1] 63351.27
 
-    ## [1] 61049.9
+    ## [1] 60804.38
 
-    ## [1] 67118.25
+    ## [1] 65002.46
 
 The highest performing model is the step-wise selected linear model.
 This is likely due to KNNs inability to handle many independent
@@ -78,10 +78,16 @@ loans that had defaulted, and attempted to match this set with similar
 loans that had not defaulted.
 
     ##   y yhat Frequency         Result
-    ## 1 0    0     0.645  True Negative
-    ## 2 1    0     0.185 False Negative
-    ## 3 0    1     0.080 False Positive
-    ## 4 1    1     0.090  True Positive
+    ## 1 0    0     0.675  True Negative
+    ## 2 1    0     0.180 False Negative
+    ## 3 0    1     0.045 False Positive
+    ## 4 1    1     0.100  True Positive
+
+    ##   y yhat  Freq         newcol
+    ## 1 0    0 0.675  True Negative
+    ## 2 1    0 0.180 False Negative
+    ## 3 0    1 0.045 False Positive
+    ## 4 1    1 0.100  True Positive
 
 The set of loans that defaulted probably had a higher-than-average
 proportion of loans with terrible credit history. Because this sample
@@ -100,18 +106,18 @@ it would be a more accurate representation of the overall portfolio.
 
     ##    yhat
     ## y      0    1
-    ##   0 8260    2
-    ##   1  738    0
+    ##   0 8275    1
+    ##   1  724    0
 
     ##    yhat_Logit
     ## y      0    1
-    ##   0 8149  113
-    ##   1  470  268
+    ##   0 8172  104
+    ##   1  465  259
 
     ##    yhat_Lasso
     ## y      0    1
-    ##   0 8170   71
-    ##   1  547  212
+    ##   0 8195   68
+    ##   1  507  230
 
 \#Problem 4 Overview \#\# 4-a Rather than basic OLS, we used a Logit
 regression for our baseline, as the probability bounding done by
@@ -132,8 +138,8 @@ the Logit).
 
     ##    yhat_Lasso
     ## y     0   1
-    ##   0 924   7
-    ##   1  46  23
+    ##   0 909   7
+    ##   1  68  16
 
 ![](BowKad_DM2_files/figure-markdown_strict/#4-b-results-1.png) \#\# 4-b
 We then tested our Lasso linear model on the hotel\_val data set, and
@@ -143,7 +149,7 @@ the classification threshold.
 
 \#4-c
 
-    ## [1] 0.3127181
+    ## [1] 0.3146572
 
 ![](BowKad_DM2_files/figure-markdown_strict/#Number%204foldfinal-1.png)
 
